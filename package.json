@@ -71,12 +71,6 @@
     "registry": "https://npm.pkg.github.com"
   },
   "devDependencies": {
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/commit-analyzer": "^14.0.0",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^11.0.0",
-    "@semantic-release/npm": "^12.0.0",
-    "@semantic-release/release-notes-generator": "^14.0.0",
     "@types/node": "^20.0.0",
     "@vitest/coverage-v8": "^4.0.7",
     "jsdom": "^27.1.0",
