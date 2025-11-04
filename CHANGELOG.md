@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/SOVEREIGN-NET/Sovereign-Network-API-Client/compare/v1.1.0...v1.1.1) (2025-11-04)
+
+
+### Bug Fixes
+
+* configure npm authentication for GitHub Packages in release workflow ([35d659c](https://github.com/SOVEREIGN-NET/Sovereign-Network-API-Client/commit/35d659c2e7af629df98a8577bf6fd4844632666d))
+
 # [1.1.0](https://github.com/SOVEREIGN-NET/Sovereign-Network-API-Client/compare/v1.0.2...v1.1.0) (2025-11-04)
 
 
