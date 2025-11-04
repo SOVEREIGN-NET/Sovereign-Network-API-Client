@@ -1,6 +1,6 @@
 {
   "name": "@sovereign-net/api-client",
-  "version": "1.1.5",
+  "version": "",
   "type": "module",
   "description": "Platform-agnostic API client for Sovereign Network ZHTP nodes",
   "main": "./dist/vanilla-js/index.js",
