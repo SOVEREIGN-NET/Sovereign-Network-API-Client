@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/SOVEREIGN-NET/Sovereign-Network-API-Client/compare/v1.0.2...v1.1.0) (2025-11-04)
+
+
+### Bug Fixes
+
+* allow dist folder to be committed by git for releases ([89dfec0](https://github.com/SOVEREIGN-NET/Sovereign-Network-API-Client/commit/89dfec01a3969cece40f1a154a3927fa137bcf6b))
+
+
+### Features
+
+* add platform-specific config providers and API client ([8c45393](https://github.com/SOVEREIGN-NET/Sovereign-Network-API-Client/commit/8c45393b63adee386d46570ab9028981dc5d68e3))
+
 ## [1.0.2](https://github.com/SOVEREIGN-NET/Sovereign-Network-API-Client/compare/v1.0.1...v1.0.2) (2025-11-04)
 
 
