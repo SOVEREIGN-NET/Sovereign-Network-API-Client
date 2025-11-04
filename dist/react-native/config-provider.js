@@ -20,19 +20,6 @@ export class ReactNativeConfigProvider {
         }
     }
     async getConfig() {
-        // Try to load cached config if AsyncStorage available
-        if (this.AsyncStorage) {
-            try {
-                const cached = await this.AsyncStorage.getItem(this.cacheKey);
-                if (cached) {
-                    return JSON.parse(cached);
-                }
-            }
-            catch (error) {
-                console.warn('Failed to load cached config:', error);
-            }
-        }
-        // Fall back to environment variables
         // Check for __DEV__ variable (React Native specific)
         let isDevMode = false;
         try {
@@ -42,6 +29,7 @@ export class ReactNativeConfigProvider {
         catch (e) {
             isDevMode = false;
         }
+        // Always prioritize envVars over cached config
         const config = {
             zhtpNodeUrl: this.envVars.ZHTP_NODE_URL ||
                 (typeof process !== 'undefined' && process.env?.ZHTP_NODE_URL) ||
