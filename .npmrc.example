@@ -1,0 +1,12 @@
+# NPM Configuration Example
+# This file shows optional npm configuration
+# Most users do NOT need to customize this for installation
+
+# Public registry (default, no configuration needed)
+# registry=https://registry.npmjs.org/
+
+# Optional: Authentication token for npm (only if publishing)
+# //registry.npmjs.org/:_authToken=YOUR_NPM_TOKEN
+
+# Optional: Peer dependency handling
+# legacy-peer-deps=true
