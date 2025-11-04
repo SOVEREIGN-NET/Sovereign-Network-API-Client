@@ -29,6 +29,11 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Configure npm for GitHub Packages
+        run: |
+          echo "@sovereign-network:registry=https://npm.pkg.github.com" >> .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
+
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
