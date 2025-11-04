@@ -16,19 +16,11 @@ A platform-agnostic TypeScript API client for Sovereign Network ZHTP nodes. Prov
 
 ## Installation
 
-### Via GitHub Packages
+```bash
+npm install @sovereign-network/api-client
+```
 
-1. **Configure NPM** (one-time setup):
-   ```bash
-   # Create or edit ~/.npmrc
-   @sovereign-network:registry=https://npm.pkg.github.com
-   //npm.pkg.github.com/:_authToken=YOUR_GITHUB_PAT
-   ```
-
-2. **Install**:
-   ```bash
-   npm install @sovereign-network/api-client
-   ```
+That's it. The package is public on GitHub Packages - no authentication required.
 
 ## Quick Start
 
