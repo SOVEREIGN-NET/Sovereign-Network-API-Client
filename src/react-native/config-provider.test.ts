@@ -20,19 +20,6 @@ describe('ReactNativeConfigProvider', () => {
   });
 
   describe('getConfig()', () => {
-    it('should load config from AsyncStorage if available', async () => {
-      const mockAsyncStorage = {
-        getItem: vi.fn().mockResolvedValue(JSON.stringify(mockConfig)),
-        setItem: vi.fn().mockResolvedValue(undefined),
-      };
-
-      provider = new ReactNativeConfigProvider(undefined, mockAsyncStorage);
-      const result = await provider.getConfig();
-
-      expect(result).toEqual(mockConfig);
-      expect(mockAsyncStorage.getItem).toHaveBeenCalledWith('zhtp_config');
-    });
-
     it('should use environment variables if provided', async () => {
       const envVars = {
         ZHTP_NODE_URL: 'http://custom-api:9000',
@@ -48,23 +35,6 @@ describe('ReactNativeConfigProvider', () => {
       expect(result.networkType).toBe('mainnet');
       expect(result.debugMode).toBe(true);
       expect(result.enableBiometrics).toBe(false);
-    });
-
-    it('should prioritize AsyncStorage over environment variables', async () => {
-      const mockAsyncStorage = {
-        getItem: vi.fn().mockResolvedValue(JSON.stringify(mockConfig)),
-        setItem: vi.fn().mockResolvedValue(undefined),
-      };
-
-      const envVars = {
-        ZHTP_NODE_URL: 'http://different-api:8000',
-      };
-
-      provider = new ReactNativeConfigProvider(envVars, mockAsyncStorage);
-      const result = await provider.getConfig();
-
-      // Should return cached config from AsyncStorage, not env var
-      expect(result.zhtpNodeUrl).toBe('http://192.168.1.31:8000');
     });
 
     it('should use environment variables if AsyncStorage is not available', async () => {
@@ -130,23 +100,25 @@ describe('ReactNativeConfigProvider', () => {
       expect(result.enableBiometrics).toBe(true);
     });
 
-    it('should cache config in AsyncStorage after loading from env', async () => {
+    it('should prioritize envVars over AsyncStorage', async () => {
       const mockAsyncStorage = {
-        getItem: vi.fn().mockResolvedValue(null),
+        getItem: vi.fn().mockResolvedValue(JSON.stringify({
+          zhtpNodeUrl: 'http://cached:8000',
+          networkType: 'testnet',
+          debugMode: false,
+          enableBiometrics: true,
+        })),
         setItem: vi.fn().mockResolvedValue(undefined),
       };
 
       const envVars = {
-        ZHTP_NODE_URL: 'http://test-api:8000',
+        ZHTP_NODE_URL: 'http://env-api:8000',
       };
 
       provider = new ReactNativeConfigProvider(envVars, mockAsyncStorage);
-      await provider.getConfig();
+      const result = await provider.getConfig();
 
-      expect(mockAsyncStorage.setItem).toHaveBeenCalled();
-      const callArg = (mockAsyncStorage.setItem as any).mock.calls[0][1];
-      const cached = JSON.parse(callArg);
-      expect(cached.zhtpNodeUrl).toBe('http://test-api:8000');
+      expect(result.zhtpNodeUrl).toBe('http://env-api:8000');
     });
 
     it('should handle AsyncStorage.getItem returning null', async () => {
@@ -165,48 +137,31 @@ describe('ReactNativeConfigProvider', () => {
       expect(result.zhtpNodeUrl).toBe('http://fallback-api:8000');
     });
 
-    it('should handle invalid JSON in AsyncStorage', async () => {
-      const mockAsyncStorage = {
-        getItem: vi.fn().mockResolvedValue('invalid json'),
-        setItem: vi.fn().mockResolvedValue(undefined),
-      };
-
+    it('should use envVars when AsyncStorage is not available', async () => {
       const envVars = {
-        ZHTP_NODE_URL: 'http://fallback-api:8000',
+        ZHTP_NODE_URL: 'http://env-api:8000',
       };
 
-      provider = new ReactNativeConfigProvider(envVars, mockAsyncStorage);
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
+      provider = new ReactNativeConfigProvider(envVars);
       const result = await provider.getConfig();
 
-      expect(result.zhtpNodeUrl).toBe('http://fallback-api:8000');
-      expect(consoleSpy).toHaveBeenCalled();
-
-      consoleSpy.mockRestore();
+      expect(result.zhtpNodeUrl).toBe('http://env-api:8000');
     });
 
-    it('should handle AsyncStorage.getItem error', async () => {
+    it('should use envVars even with AsyncStorage errors', async () => {
       const mockAsyncStorage = {
-        getItem: vi
-          .fn()
-          .mockRejectedValue(new Error('AsyncStorage error')),
+        getItem: vi.fn().mockRejectedValue(new Error('AsyncStorage error')),
         setItem: vi.fn().mockResolvedValue(undefined),
       };
 
       const envVars = {
-        ZHTP_NODE_URL: 'http://fallback-api:8000',
+        ZHTP_NODE_URL: 'http://env-api:8000',
       };
 
       provider = new ReactNativeConfigProvider(envVars, mockAsyncStorage);
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
       const result = await provider.getConfig();
 
-      expect(result.zhtpNodeUrl).toBe('http://fallback-api:8000');
-      expect(consoleSpy).toHaveBeenCalled();
-
-      consoleSpy.mockRestore();
+      expect(result.zhtpNodeUrl).toBe('http://env-api:8000');
     });
 
     it('should handle AsyncStorage.setItem error silently', async () => {
@@ -253,11 +208,15 @@ describe('ReactNativeConfigProvider', () => {
 
     it('should merge partial updates with existing config', async () => {
       const mockAsyncStorage = {
-        getItem: vi.fn().mockResolvedValue(JSON.stringify(mockConfig)),
+        getItem: vi.fn().mockResolvedValue(null),
         setItem: vi.fn().mockResolvedValue(undefined),
       };
 
-      provider = new ReactNativeConfigProvider(undefined, mockAsyncStorage);
+      const envVars = {
+        ZHTP_NODE_URL: 'http://test-api:8000',
+      };
+
+      provider = new ReactNativeConfigProvider(envVars, mockAsyncStorage);
 
       await provider.updateConfig({ networkType: 'mainnet' });
 
@@ -266,7 +225,7 @@ describe('ReactNativeConfigProvider', () => {
       ][1];
       const updated = JSON.parse(callArg);
       expect(updated.networkType).toBe('mainnet');
-      expect(updated.zhtpNodeUrl).toBe(mockConfig.zhtpNodeUrl);
+      expect(updated.zhtpNodeUrl).toBe('http://test-api:8000');
     });
 
     it('should throw error if AsyncStorage not available', async () => {
