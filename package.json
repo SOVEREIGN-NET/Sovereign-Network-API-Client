@@ -12,22 +12,22 @@
   "exports": {
     ".": {
       "types": "./dist/vanilla-js/index.d.ts",
-      "import": "./dist/vanilla-js/index.mjs",
+      "import": "./dist/vanilla-js/index.js",
       "require": "./dist/vanilla-js/index.js"
     },
     "./vanilla-js": {
       "types": "./dist/vanilla-js/index.d.ts",
-      "import": "./dist/vanilla-js/index.mjs",
+      "import": "./dist/vanilla-js/index.js",
       "require": "./dist/vanilla-js/index.js"
     },
     "./react-native": {
       "types": "./dist/react-native/index.d.ts",
-      "import": "./dist/react-native/index.mjs",
+      "import": "./dist/react-native/index.js",
       "require": "./dist/react-native/index.js"
     },
     "./electron": {
       "types": "./dist/electron/index.d.ts",
-      "import": "./dist/electron/index.mjs",
+      "import": "./dist/electron/index.js",
       "require": "./dist/electron/index.js"
     }
   },
