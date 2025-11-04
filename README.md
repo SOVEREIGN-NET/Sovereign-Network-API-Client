@@ -1,6 +1,6 @@
 # Sovereign Network API Client
 
-[![codecov](https://codecov.io/gh/SOVEREIGN-NET/Sovereign-Network-API-Client/branch/main/graph/badge.svg?token=CODECOV_TOKEN)](https://codecov.io/gh/SOVEREIGN-NET/Sovereign-Network-API-Client)
+[![codecov](https://codecov.io/gh/SOVEREIGN-NET/Sovereign-Network-API-Client/branch/main/graph/badge.svg)](https://codecov.io/gh/SOVEREIGN-NET/Sovereign-Network-API-Client)
 
 A platform-agnostic TypeScript API client for Sovereign Network ZHTP nodes. Provides unified access to identity, wallet, DAO, smart contract, and blockchain operations across Electron, React Native, and web/Node.js environments with a single codebase.
 
@@ -16,11 +16,19 @@ A platform-agnostic TypeScript API client for Sovereign Network ZHTP nodes. Prov
 
 ## Installation
 
-### Via NPM Registry
+### Via GitHub Packages
 
-```bash
-npm install @sovereign-network/api-client
-```
+1. **Configure NPM** (one-time setup):
+   ```bash
+   # Create or edit ~/.npmrc
+   @sovereign-network:registry=https://npm.pkg.github.com
+   //npm.pkg.github.com/:_authToken=YOUR_GITHUB_PAT
+   ```
+
+2. **Install**:
+   ```bash
+   npm install @sovereign-network/api-client
+   ```
 
 ## Quick Start
 
@@ -381,18 +389,27 @@ npm run prepare  # type-check + build + tests all at once
 
 ## Publishing
 
-### Update Version
-```bash
-npm version patch  # or minor, major
-```
+Publishing is **automated** via GitHub Actions on every push to `main`:
 
-### Publish to NPM
-```bash
-npm login
-npm publish
-```
+1. **Commit with semantic messages**:
+   - `fix:` → patch version (1.0.0 → 1.0.1)
+   - `feat:` → minor version (1.0.0 → 1.1.0)
+   - `BREAKING CHANGE:` → major version (1.0.0 → 2.0.0)
 
-Requires npm account. Log in once, then publish.
+2. **Push to main**:
+   ```bash
+   git push origin main
+   ```
+
+3. **Automated workflow**:
+   - Analyzes commits
+   - Bumps version
+   - Creates CHANGELOG
+   - Publishes to GitHub Packages
+   - Creates GitHub release
+   - Commits back to repo
+
+No manual steps needed!
 
 ## Project Structure
 

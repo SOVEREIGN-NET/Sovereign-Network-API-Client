@@ -67,6 +67,9 @@
   "engines": {
     "node": ">=20.0.0"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
