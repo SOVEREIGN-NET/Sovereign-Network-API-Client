@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/SOVEREIGN-NET/Sovereign-Network-API-Client/compare/v1.0.1...v1.0.2) (2025-11-04)
+
+
+### Bug Fixes
+
+* remove broken semantic-release plugin versions from devDependencies ([ffb8d24](https://github.com/SOVEREIGN-NET/Sovereign-Network-API-Client/commit/ffb8d246a57c5adfcd36393f4f8c2a2d3feab041))
+
 ## [1.0.1](https://github.com/SOVEREIGN-NET/Sovereign-Network-API-Client/compare/v1.0.0...v1.0.1) (2025-11-04)
 
 
