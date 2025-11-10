@@ -12,7 +12,20 @@ export interface Identity {
   citizenship?: boolean;
   publicKey?: string;
   biometricHash?: string;
-  wallets?: Wallet[];
+  wallets?: {
+    primary: WalletInfo;
+    ubi: WalletInfo;
+    savings: WalletInfo;
+  };
+  daoMembership?: {
+    votingPower: number;
+    soulboundNftIssued: boolean;
+  };
+  seedPhrases?: {
+    primary: string[];
+    ubi: string[];
+    savings: string[];
+  };
   votingPower?: number;
   ubiEarned?: number;
 }
@@ -22,6 +35,15 @@ export interface Wallet {
   name: string;
   balance: number;
   address: string;
+}
+
+export interface WalletInfo {
+  id: string;
+  wallet_type: string;
+  name: string;
+  balance: number;
+  staked_balance: number;
+  pending_rewards: number;
 }
 
 export interface NetworkStatus {
@@ -187,4 +209,67 @@ export interface Proof {
   data: string;
   timestamp: string;
   signature?: string;
+}
+
+// ==================== Signup/Login Types ====================
+
+export interface SignupRequest {
+  display_name: string;
+  identity_type?: string;
+  recovery_options?: string[];
+  password: string;
+}
+
+export interface LoginRequest {
+  identity_id: string;
+  password: string;
+}
+
+export interface SignupResponse {
+  status: string;
+  identity_id: string;
+  identity_type: string;
+  access_level: string;
+  created_at: number;
+  citizenship_result?: CitizenshipResult;
+}
+
+export interface LoginResponse {
+  status: string;
+  identity_id: string;
+  display_name: string;
+  identity_type: string;
+  access_level: string;
+  wallets: {
+    primary: WalletInfo;
+    ubi: WalletInfo;
+    savings: WalletInfo;
+  };
+}
+
+export interface CitizenshipResult {
+  identity_id: string;
+  primary_wallet_id: string;
+  ubi_wallet_id: string;
+  savings_wallet_id: string;
+  wallet_seed_phrases: {
+    primary_wallet_seeds: { words: string[] };
+    ubi_wallet_seeds: { words: string[] };
+    savings_wallet_seeds: { words: string[] };
+  };
+  dao_registration: {
+    voting_power: number;
+    soulbound_nft_issued: boolean;
+    registered_at: number;
+  };
+  ubi_registration: {
+    ubi_wallet_id: string;
+    ubi_enabled: boolean;
+  };
+  web4_access: {
+    web4_enabled: boolean;
+  };
+  welcome_bonus: {
+    bonus_amount: number;
+  };
 }

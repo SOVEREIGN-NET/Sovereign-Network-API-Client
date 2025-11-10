@@ -8,6 +8,7 @@ export { ZhtpApi } from '../core/zhtp-api';
 export type {
   Identity,
   Wallet,
+  WalletInfo,
   NetworkStatus,
   DaoProposal,
   DaoStats,
@@ -27,5 +28,10 @@ export type {
   NodeStatus,
   GasInfo,
   Proof,
+  SignupRequest,
+  SignupResponse,
+  LoginRequest,
+  LoginResponse,
+  CitizenshipResult,
 } from '../core/types';
 export type { ConfigProvider } from '../core/config-provider';

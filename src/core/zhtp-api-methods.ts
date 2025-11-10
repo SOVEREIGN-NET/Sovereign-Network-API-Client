@@ -22,6 +22,10 @@ import {
   NodeStatus,
   GasInfo,
   Proof,
+  SignupRequest,
+  SignupResponse,
+  LoginRequest,
+  LoginResponse,
 } from './types';
 
 export abstract class ZhtpApiMethods extends ZhtpApiCore {
@@ -41,6 +45,106 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
+  }
+
+  /**
+   * Sign up a new citizen identity with 3 wallets, DAO membership, and welcome bonus
+   */
+  async signup(request: SignupRequest): Promise<Identity> {
+    const response = await this.request<SignupResponse>('/api/v1/identity/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+
+    // Map backend response to Identity interface
+    return this.mapSignupResponseToIdentity(response);
+  }
+
+  /**
+   * Login with existing identity
+   */
+  async login(request: LoginRequest): Promise<Identity> {
+    const response = await this.request<LoginResponse>('/api/v1/identity/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+
+    // Map backend response to Identity interface
+    return this.mapLoginResponseToIdentity(response);
+  }
+
+  /**
+   * Map signup response from backend to Identity interface
+   */
+  private mapSignupResponseToIdentity(response: SignupResponse): Identity {
+    const citizenship = response.citizenship_result;
+
+    return {
+      did: response.identity_id,
+      displayName: citizenship?.wallet_seed_phrases ? 'Citizen' : 'Unknown',
+      identityType: response.identity_type.toLowerCase() === 'human' ? 'citizen' : 'organization',
+      createdAt: new Date(response.created_at * 1000).toISOString(),
+      citizenship: !!citizenship,
+      wallets: citizenship ? {
+        primary: {
+          id: citizenship.primary_wallet_id,
+          wallet_type: 'Primary',
+          name: 'Primary Wallet',
+          balance: citizenship.welcome_bonus.bonus_amount,
+          staked_balance: 0,
+          pending_rewards: 0,
+        },
+        ubi: {
+          id: citizenship.ubi_wallet_id,
+          wallet_type: 'UBI',
+          name: 'UBI Wallet',
+          balance: 0,
+          staked_balance: 0,
+          pending_rewards: 0,
+        },
+        savings: {
+          id: citizenship.savings_wallet_id,
+          wallet_type: 'Savings',
+          name: 'Savings Wallet',
+          balance: 0,
+          staked_balance: 0,
+          pending_rewards: 0,
+        },
+      } : undefined,
+      daoMembership: citizenship ? {
+        votingPower: citizenship.dao_registration.voting_power,
+        soulboundNftIssued: citizenship.dao_registration.soulbound_nft_issued,
+      } : undefined,
+      seedPhrases: citizenship ? {
+        primary: citizenship.wallet_seed_phrases.primary_wallet_seeds.words,
+        ubi: citizenship.wallet_seed_phrases.ubi_wallet_seeds.words,
+        savings: citizenship.wallet_seed_phrases.savings_wallet_seeds.words,
+      } : undefined,
+      votingPower: citizenship?.dao_registration.voting_power,
+    };
+  }
+
+  /**
+   * Map login response from backend to Identity interface
+   */
+  private mapLoginResponseToIdentity(response: LoginResponse): Identity {
+    return {
+      did: response.identity_id,
+      displayName: response.display_name,
+      identityType: response.identity_type.toLowerCase() === 'human' ? 'citizen' : 'organization',
+      createdAt: new Date().toISOString(),
+      citizenship: true,
+      wallets: {
+        primary: response.wallets.primary,
+        ubi: response.wallets.ubi,
+        savings: response.wallets.savings,
+      },
+      // Note: DAO membership info not returned by login endpoint yet
+      daoMembership: undefined,
+      votingPower: undefined,
+    };
   }
 
   async recoverIdentity(
