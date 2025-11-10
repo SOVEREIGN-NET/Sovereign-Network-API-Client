@@ -3,10 +3,26 @@
  * All API method implementations for various operations
  */
 import { ZhtpApiCore } from './zhtp-api-core';
-import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, Proof } from './types';
+import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, Proof, SignupRequest, LoginRequest } from './types';
 export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
     signIn(did: string, passphrase: string): Promise<Identity>;
     createIdentity(data: any): Promise<Identity>;
+    /**
+     * Sign up a new citizen identity with 3 wallets, DAO membership, and welcome bonus
+     */
+    signup(request: SignupRequest): Promise<Identity>;
+    /**
+     * Login with existing identity
+     */
+    login(request: LoginRequest): Promise<Identity>;
+    /**
+     * Map signup response from backend to Identity interface
+     */
+    private mapSignupResponseToIdentity;
+    /**
+     * Map login response from backend to Identity interface
+     */
+    private mapLoginResponseToIdentity;
     recoverIdentity(method: 'seed' | 'backup' | 'social', data: string): Promise<Identity>;
     recoverIdentityFromSeed(recoveryData: Record<string, any>): Promise<Identity>;
     restoreIdentityFromBackup(backupData: Record<string, any>): Promise<Identity>;
