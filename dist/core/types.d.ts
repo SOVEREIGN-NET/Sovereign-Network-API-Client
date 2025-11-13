@@ -248,4 +248,71 @@ export interface CitizenshipResult {
         bonus_amount: number;
     };
 }
+export interface BackupData {
+    version: string;
+    encrypted_data: string;
+    metadata: {
+        created_at: number;
+        identity_id: string;
+        backup_type: string;
+    };
+}
+export interface BackupVerification {
+    valid: boolean;
+    version: string;
+    created_at: number;
+    identity_id?: string;
+    errors: string[];
+    warnings: string[];
+}
+export interface SeedVerification {
+    valid: boolean;
+    wallet_id?: string;
+    wallet_type?: string;
+}
+export interface SeedPhrases {
+    primary?: string[];
+    ubi?: string[];
+    savings?: string[];
+    master?: string[];
+}
+export interface Guardian {
+    guardian_id: string;
+    guardian_name?: string;
+    status: 'pending' | 'active' | 'revoked';
+    added_at: number;
+    relationship?: string;
+}
+export interface GuardianResponse {
+    status: string;
+    guardian_id: string;
+    message: string;
+}
+export interface RecoverySession {
+    recovery_id: string;
+    identity_id: string;
+    status: 'initiated' | 'pending_approvals' | 'completed' | 'cancelled';
+    required_approvals: number;
+    current_approvals: number;
+    guardian_ids: string[];
+    created_at: number;
+    expires_at: number;
+}
+export interface RecoveryStatus {
+    recovery_id: string;
+    status: 'initiated' | 'pending_approvals' | 'completed' | 'cancelled' | 'failed';
+    progress: {
+        required: number;
+        approved: number;
+        declined: number;
+    };
+    guardians: Array<{
+        guardian_id: string;
+        status: 'pending' | 'approved' | 'declined';
+        responded_at?: number;
+    }>;
+    created_at: number;
+    updated_at: number;
+    expires_at: number;
+}
 //# sourceMappingURL=types.d.ts.map

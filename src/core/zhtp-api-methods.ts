@@ -26,6 +26,15 @@ import {
   SignupResponse,
   LoginRequest,
   LoginResponse,
+  BackupData,
+  BackupVerification,
+  SeedVerification,
+  SeedPhrases,
+  Guardian,
+  GuardianResponse,
+  RecoverySession,
+  RecoveryStatus,
+  CitizenshipResult,
 } from './types';
 
 export abstract class ZhtpApiMethods extends ZhtpApiCore {
@@ -160,7 +169,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
   }
 
   async recoverIdentityFromSeed(recoveryData: Record<string, any>): Promise<Identity> {
-    return this.request<Identity>('/api/v1/identity/recover/seed', {
+    return this.request<Identity>('/api/v1/identity/restore/seed', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(recoveryData),
@@ -168,7 +177,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
   }
 
   async restoreIdentityFromBackup(backupData: Record<string, any>): Promise<Identity> {
-    return this.request<Identity>('/api/v1/identity/restore/backup', {
+    return this.request<Identity>('/api/v1/identity/backup/import', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(backupData),
@@ -180,6 +189,128 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(guardianData),
+    });
+  }
+
+  // ==================== Backup Operations ====================
+
+  async exportBackup(identityId: string, password: string): Promise<BackupData> {
+    return this.request<BackupData>('/api/v1/identity/backup/export', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identity_id: identityId, password }),
+    });
+  }
+
+  async importBackup(backupData: string, password: string): Promise<Identity> {
+    return this.request<Identity>('/api/v1/identity/backup/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ backup_data: backupData, password }),
+    });
+  }
+
+  async verifyBackup(backupData: string): Promise<BackupVerification> {
+    return this.request<BackupVerification>('/api/v1/identity/backup/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ backup_data: backupData }),
+    });
+  }
+
+  // ==================== Seed Phrase Operations ====================
+
+  async verifySeedPhrase(identityId: string, seedPhrase: string): Promise<SeedVerification> {
+    return this.request<SeedVerification>('/api/v1/identity/seed/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identity_id: identityId, seed_phrase: seedPhrase }),
+    });
+  }
+
+  async exportSeedPhrases(identityId: string): Promise<SeedPhrases> {
+    return this.request<SeedPhrases>(`/api/v1/identity/${identityId}/seeds`);
+  }
+
+  // ==================== Guardian Management ====================
+
+  async addGuardian(identityId: string, guardianId: string, guardianInfo?: Record<string, any>): Promise<GuardianResponse> {
+    return this.request<GuardianResponse>('/api/v1/guardian/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        identity_id: identityId,
+        guardian_id: guardianId,
+        ...guardianInfo
+      }),
+    });
+  }
+
+  async listGuardians(identityId: string): Promise<Guardian[]> {
+    return this.request<Guardian[]>(`/api/v1/guardian/list/${identityId}`);
+  }
+
+  async removeGuardian(identityId: string, guardianId: string): Promise<void> {
+    await this.request<void>('/api/v1/guardian/remove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identity_id: identityId, guardian_id: guardianId }),
+    });
+  }
+
+  async acceptGuardianInvite(guardianId: string, identityId: string): Promise<void> {
+    await this.request<void>('/api/v1/guardian/accept', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ guardian_id: guardianId, identity_id: identityId }),
+    });
+  }
+
+  async declineGuardianInvite(guardianId: string, identityId: string): Promise<void> {
+    await this.request<void>('/api/v1/guardian/decline', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ guardian_id: guardianId, identity_id: identityId }),
+    });
+  }
+
+  // ==================== Guardian Recovery Flow ====================
+
+  async initiateRecovery(identityId: string, guardianIds: string[]): Promise<RecoverySession> {
+    return this.request<RecoverySession>('/api/v1/guardian/recovery/initiate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identity_id: identityId, guardian_ids: guardianIds }),
+    });
+  }
+
+  async approveRecovery(guardianId: string, recoveryId: string, approval: boolean): Promise<void> {
+    await this.request<void>('/api/v1/guardian/recovery/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ guardian_id: guardianId, recovery_id: recoveryId, approval }),
+    });
+  }
+
+  async getRecoveryStatus(recoveryId: string): Promise<RecoveryStatus> {
+    return this.request<RecoveryStatus>(`/api/v1/guardian/recovery/status/${recoveryId}`);
+  }
+
+  async cancelRecovery(recoveryId: string): Promise<void> {
+    await this.request<void>('/api/v1/guardian/recovery/cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recovery_id: recoveryId }),
+    });
+  }
+
+  // ==================== Citizenship ====================
+
+  async applyCitizenship(identityId: string, applicationData?: Record<string, any>): Promise<CitizenshipResult> {
+    return this.request<CitizenshipResult>('/api/v1/identity/citizenship/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identity_id: identityId, ...applicationData }),
     });
   }
 

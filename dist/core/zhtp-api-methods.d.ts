@@ -3,7 +3,7 @@
  * All API method implementations for various operations
  */
 import { ZhtpApiCore } from './zhtp-api-core';
-import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, Proof, SignupRequest, LoginRequest } from './types';
+import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, Proof, SignupRequest, LoginRequest, BackupData, BackupVerification, SeedVerification, SeedPhrases, Guardian, GuardianResponse, RecoverySession, RecoveryStatus, CitizenshipResult } from './types';
 export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
     signIn(did: string, passphrase: string): Promise<Identity>;
     createIdentity(data: any): Promise<Identity>;
@@ -27,6 +27,21 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
     recoverIdentityFromSeed(recoveryData: Record<string, any>): Promise<Identity>;
     restoreIdentityFromBackup(backupData: Record<string, any>): Promise<Identity>;
     recoverIdentityWithGuardians(guardianData: Record<string, any>): Promise<Identity>;
+    exportBackup(identityId: string, password: string): Promise<BackupData>;
+    importBackup(backupData: string, password: string): Promise<Identity>;
+    verifyBackup(backupData: string): Promise<BackupVerification>;
+    verifySeedPhrase(identityId: string, seedPhrase: string): Promise<SeedVerification>;
+    exportSeedPhrases(identityId: string): Promise<SeedPhrases>;
+    addGuardian(identityId: string, guardianId: string, guardianInfo?: Record<string, any>): Promise<GuardianResponse>;
+    listGuardians(identityId: string): Promise<Guardian[]>;
+    removeGuardian(identityId: string, guardianId: string): Promise<void>;
+    acceptGuardianInvite(guardianId: string, identityId: string): Promise<void>;
+    declineGuardianInvite(guardianId: string, identityId: string): Promise<void>;
+    initiateRecovery(identityId: string, guardianIds: string[]): Promise<RecoverySession>;
+    approveRecovery(guardianId: string, recoveryId: string, approval: boolean): Promise<void>;
+    getRecoveryStatus(recoveryId: string): Promise<RecoveryStatus>;
+    cancelRecovery(recoveryId: string): Promise<void>;
+    applyCitizenship(identityId: string, applicationData?: Record<string, any>): Promise<CitizenshipResult>;
     createZkDid(didData?: Record<string, any>): Promise<any>;
     getIdentity(did: string): Promise<Identity>;
     verifyIdentity(did: string, requirements?: Record<string, any>): Promise<boolean>;
