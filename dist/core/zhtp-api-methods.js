@@ -121,14 +121,14 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         });
     }
     async recoverIdentityFromSeed(recoveryData) {
-        return this.request('/api/v1/identity/recover/seed', {
+        return this.request('/api/v1/identity/restore/seed', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(recoveryData),
         });
     }
     async restoreIdentityFromBackup(backupData) {
-        return this.request('/api/v1/identity/restore/backup', {
+        return this.request('/api/v1/identity/backup/import', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(backupData),
@@ -139,6 +139,108 @@ export class ZhtpApiMethods extends ZhtpApiCore {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(guardianData),
+        });
+    }
+    // ==================== Backup Operations ====================
+    async exportBackup(identityId, password) {
+        return this.request('/api/v1/identity/backup/export', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identity_id: identityId, password }),
+        });
+    }
+    async importBackup(backupData, password) {
+        return this.request('/api/v1/identity/backup/import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ backup_data: backupData, password }),
+        });
+    }
+    async verifyBackup(backupData) {
+        return this.request('/api/v1/identity/backup/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ backup_data: backupData }),
+        });
+    }
+    // ==================== Seed Phrase Operations ====================
+    async verifySeedPhrase(identityId, seedPhrase) {
+        return this.request('/api/v1/identity/seed/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identity_id: identityId, seed_phrase: seedPhrase }),
+        });
+    }
+    async exportSeedPhrases(identityId) {
+        return this.request(`/api/v1/identity/${identityId}/seeds`);
+    }
+    // ==================== Guardian Management ====================
+    async addGuardian(identityId, guardianId, guardianInfo) {
+        return this.request('/api/v1/guardian/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                identity_id: identityId,
+                guardian_id: guardianId,
+                ...guardianInfo
+            }),
+        });
+    }
+    async listGuardians(identityId) {
+        return this.request(`/api/v1/guardian/list/${identityId}`);
+    }
+    async removeGuardian(identityId, guardianId) {
+        await this.request('/api/v1/guardian/remove', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identity_id: identityId, guardian_id: guardianId }),
+        });
+    }
+    async acceptGuardianInvite(guardianId, identityId) {
+        await this.request('/api/v1/guardian/accept', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ guardian_id: guardianId, identity_id: identityId }),
+        });
+    }
+    async declineGuardianInvite(guardianId, identityId) {
+        await this.request('/api/v1/guardian/decline', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ guardian_id: guardianId, identity_id: identityId }),
+        });
+    }
+    // ==================== Guardian Recovery Flow ====================
+    async initiateRecovery(identityId, guardianIds) {
+        return this.request('/api/v1/guardian/recovery/initiate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identity_id: identityId, guardian_ids: guardianIds }),
+        });
+    }
+    async approveRecovery(guardianId, recoveryId, approval) {
+        await this.request('/api/v1/guardian/recovery/approve', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ guardian_id: guardianId, recovery_id: recoveryId, approval }),
+        });
+    }
+    async getRecoveryStatus(recoveryId) {
+        return this.request(`/api/v1/guardian/recovery/status/${recoveryId}`);
+    }
+    async cancelRecovery(recoveryId) {
+        await this.request('/api/v1/guardian/recovery/cancel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ recovery_id: recoveryId }),
+        });
+    }
+    // ==================== Citizenship ====================
+    async applyCitizenship(identityId, applicationData) {
+        return this.request('/api/v1/identity/citizenship/apply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identity_id: identityId, ...applicationData }),
         });
     }
     async createZkDid(didData) {
