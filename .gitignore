@@ -13,4 +13,3 @@ coverage/
 *.swo
 .claude-memory.md
 scripts/manual-release.sh
-scripts/manual-release.sh
