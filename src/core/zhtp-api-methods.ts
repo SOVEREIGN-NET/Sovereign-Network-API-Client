@@ -557,8 +557,12 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
     return this.request<any>(endpoint);
   }
 
-  async getContractByHash(hash: string): Promise<any> {
-    return this.request<any>(`/api/v1/blockchain/contract/${hash}`);
+  /**
+   * Lookup contract by blockchain transaction hash
+   * @param hash - Deployment transaction hash
+   */
+  async getContractByHash(hash: string): Promise<SmartContract> {
+    return this.request<SmartContract>(`/api/v1/blockchain/contract/${hash}`);
   }
 
   async getContractById(contractId: string): Promise<SmartContract> {
@@ -567,6 +571,22 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
 
   async resolveDomain(domainName: string): Promise<DApp> {
     return this.request<DApp>(`/api/v1/web4/resolve/${encodeURIComponent(domainName)}`);
+  }
+
+  /**
+   * Resolve Web4 domain via DHT network
+   * @param domain - Domain name (e.g., "example.zhtp")
+   */
+  async resolveWeb4ViaDht(domain: string): Promise<DApp> {
+    return this.request<DApp>(`/api/v1/dht/web4/resolve/${encodeURIComponent(domain)}`);
+  }
+
+  /**
+   * Get contract from DHT distributed storage
+   * @param contractId - Contract identifier
+   */
+  async getContractFromDht(contractId: string): Promise<SmartContract> {
+    return this.request<SmartContract>(`/api/v1/dht/contract/${contractId}`);
   }
 
   // ==================== Blockchain Operations ====================
