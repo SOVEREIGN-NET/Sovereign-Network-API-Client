@@ -372,7 +372,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
   // ==================== Network Operations ====================
 
   async getNetworkInfo(): Promise<NetworkStatus> {
-    return this.request<NetworkStatus>('/mesh/peers');
+    return this.request<NetworkStatus>('/api/v1/blockchain/network/peers');
   }
 
   // ==================== Wallet & Transaction Operations ====================
@@ -409,7 +409,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
     amount: number,
     metadata?: Record<string, any>
   ): Promise<Transaction> {
-    return this.request<Transaction>('/wallet/send', {
+    return this.request<Transaction>('/api/v1/wallet/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ from, to, amount, metadata }),
@@ -419,7 +419,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
   // ==================== DAO Operations ====================
 
   async getDaoProposals(): Promise<DaoProposal[]> {
-    return this.request<DaoProposal[]>('/dao/proposals');
+    return this.request<DaoProposal[]>('/api/v1/dao/proposals/list');
   }
 
   async getDaoStats(): Promise<DaoStats> {
@@ -447,7 +447,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
   }
 
   async createProposal(proposal: any): Promise<DaoProposal> {
-    return this.request<DaoProposal>('/dao/proposals', {
+    return this.request<DaoProposal>('/api/v1/dao/proposals', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(proposal),
@@ -459,7 +459,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
     vote: boolean,
     voterDid: string
   ): Promise<void> {
-    await this.request<void>('/dao/vote', {
+    await this.request<void>('/api/v1/dao/vote/cast', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ proposalId, vote, voterDid }),
@@ -467,7 +467,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
   }
 
   async getDaoTreasury(): Promise<number> {
-    const response = await this.request<any>('/dao/treasury');
+    const response = await this.request<any>('/api/v1/dao/treasury/balance');
     return response?.balance || 0;
   }
 
@@ -476,11 +476,11 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
   }
 
   async getDaoData(): Promise<Record<string, any>> {
-    return this.request<Record<string, any>>('/dao/data');
+    return this.request<Record<string, any>>('/api/v1/dao/data');
   }
 
   async getDaoDelegates(): Promise<Delegate[]> {
-    return this.request<Delegate[]>('/dao/delegates');
+    return this.request<Delegate[]>('/api/v1/dao/delegates');
   }
 
   async getDelegateProfile(delegateId: string): Promise<Delegate> {
@@ -488,7 +488,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
   }
 
   async registerDelegate(userDid: string, delegateInfo: Record<string, any>): Promise<Delegate> {
-    return this.request<Delegate>('/dao/delegates/register', {
+    return this.request<Delegate>('/api/v1/dao/delegates/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userDid, delegateInfo }),
@@ -496,7 +496,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
   }
 
   async revokeDelegation(userDid: string): Promise<void> {
-    await this.request<void>('/dao/delegates/revoke', {
+    await this.request<void>('/api/v1/dao/delegates/revoke', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userDid }),
@@ -504,11 +504,11 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
   }
 
   async getTreasuryHistory(): Promise<TreasuryRecord[]> {
-    return this.request<TreasuryRecord[]>('/dao/treasury/history');
+    return this.request<TreasuryRecord[]>('/api/v1/dao/treasury/history');
   }
 
   async createSpendingProposal(proposalData: Record<string, any>): Promise<DaoProposal> {
-    return this.request<DaoProposal>('/dao/proposals/spending', {
+    return this.request<DaoProposal>('/api/v1/dao/proposals/spending', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(proposalData),
@@ -572,19 +572,19 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
   // ==================== Blockchain Operations ====================
 
   async getBlockchainInfo(): Promise<any> {
-    return this.request<any>('/blockchain/info');
+    return this.request<any>('/api/v1/blockchain/status');
   }
 
   async getGasInfo(): Promise<any> {
-    return this.request<any>('/network/gas');
+    return this.request<any>('/api/v1/network/gas');
   }
 
   async getNodeStatus(): Promise<NodeStatus> {
-    return this.request<NodeStatus>('/node/status');
+    return this.request<NodeStatus>('/api/v1/protocol/info');
   }
 
   async getMeshPeers(): Promise<{ peers: string[]; count: number }> {
-    return this.request<{ peers: string[]; count: number }>('/mesh/peers');
+    return this.request<{ peers: string[]; count: number }>('/api/v1/blockchain/network/peers');
   }
 
   async getNetworkStats(): Promise<{
@@ -709,7 +709,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
 
   async getProtocolInfo() {
     try {
-      const response = await this.request<any>('/node/status');
+      const response = await this.request<any>('/api/v1/protocol/info');
 
       return {
         success: true,
