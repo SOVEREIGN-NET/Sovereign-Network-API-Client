@@ -595,8 +595,8 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
     return this.request<any>('/api/v1/blockchain/status');
   }
 
-  async getGasInfo(): Promise<any> {
-    return this.request<any>('/api/v1/network/gas');
+  async getGasInfo(): Promise<GasInfo> {
+    return this.request<GasInfo>('/api/v1/network/gas');
   }
 
   async getNodeStatus(): Promise<NodeStatus> {
