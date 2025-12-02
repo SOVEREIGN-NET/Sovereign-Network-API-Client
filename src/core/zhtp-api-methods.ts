@@ -618,7 +618,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
     contractData: SmartContract,
     options?: Record<string, any>
   ): Promise<ContractDeploymentResult> {
-    return this.request<ContractDeploymentResult>('/api/v1/contract/deploy', {
+    return this.request<ContractDeploymentResult>('/api/v1/blockchain/contracts/deploy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...contractData, ...options }),
@@ -630,10 +630,10 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
     functionName: string,
     args?: any[]
   ): Promise<ContractExecutionResult> {
-    return this.request<ContractExecutionResult>('/api/v1/contract/execute', {
+    return this.request<ContractExecutionResult>(`/api/v1/blockchain/contracts/${contractId}/call`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contractId, functionName, args }),
+      body: JSON.stringify({ functionName, args }),
     });
   }
 
@@ -642,14 +642,8 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
     functionName?: string,
     args?: any[]
   ): Promise<Record<string, any>> {
-    let endpoint = `/api/v1/contract/query/${contractId}`;
-    if (functionName) {
-      endpoint += `/${functionName}`;
-    }
-    return this.request<Record<string, any>>(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ args }),
+    return this.request<Record<string, any>>(`/api/v1/blockchain/contracts/${contractId}/state`, {
+      method: 'GET',
     });
   }
 
