@@ -214,7 +214,7 @@ describe('ZhtpApi', () => {
       global.fetch = vi.fn();
     });
 
-    it('getWallets should GET from /wallet/balance', async () => {
+    it('getWallets should GET from /api/v1/wallet/balance', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue([{ id: 'w1', balance: 100 }]),
@@ -223,7 +223,7 @@ describe('ZhtpApi', () => {
       await api.getWallets('did:test');
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/wallet/balance'),
+        expect.stringContaining('/api/v1/wallet/balance'),
         expect.any(Object)
       );
     });
@@ -244,7 +244,7 @@ describe('ZhtpApi', () => {
       expect(balance).toBe(150);
     });
 
-    it('getTransactionHistory should GET from /wallet/transactions', async () => {
+    it('getTransactionHistory should GET from /api/v1/wallet/transactions', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue([]),
@@ -253,12 +253,12 @@ describe('ZhtpApi', () => {
       await api.getTransactionHistory('address');
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/wallet/transactions'),
+        expect.stringContaining('/api/v1/wallet/transactions'),
         expect.any(Object)
       );
     });
 
-    it('getAssets should GET from /wallet/assets', async () => {
+    it('getAssets should GET from /api/v1/wallet/assets', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue([]),
@@ -267,12 +267,12 @@ describe('ZhtpApi', () => {
       await api.getAssets('address');
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/wallet/assets'),
+        expect.stringContaining('/api/v1/wallet/assets'),
         expect.any(Object)
       );
     });
 
-    it('sendTransaction should POST to /wallet/send', async () => {
+    it('sendTransaction should POST to /api/v1/wallet/send', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({ id: 'tx1' }),
@@ -281,7 +281,7 @@ describe('ZhtpApi', () => {
       await api.sendTransaction('from', 'to', 100);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/wallet/send',
+        'http://localhost:8000/api/v1/wallet/send',
         expect.objectContaining({ method: 'POST' })
       );
     });
@@ -294,7 +294,7 @@ describe('ZhtpApi', () => {
       global.fetch = vi.fn();
     });
 
-    it('getDaoProposals should GET from /dao/proposals', async () => {
+    it('getDaoProposals should GET from /api/v1/dao/proposals/list', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue([]),
@@ -303,12 +303,12 @@ describe('ZhtpApi', () => {
       await api.getDaoProposals();
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/dao/proposals',
+        'http://localhost:8000/api/v1/dao/proposals/list',
         expect.any(Object)
       );
     });
 
-    it('submitVote should POST to /dao/vote', async () => {
+    it('submitVote should POST to /api/v1/dao/vote/cast', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({}),
@@ -317,7 +317,7 @@ describe('ZhtpApi', () => {
       await api.submitVote('proposal1', true, 'did:user');
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/dao/vote',
+        'http://localhost:8000/api/v1/dao/vote/cast',
         expect.objectContaining({ method: 'POST' })
       );
     });
@@ -402,7 +402,7 @@ describe('ZhtpApi', () => {
       global.fetch = vi.fn();
     });
 
-    it('deployContract should POST to /api/v1/contract/deploy', async () => {
+    it('deployContract should POST to /api/v1/blockchain/contracts/deploy', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({ contractId: 'c1' }),
@@ -411,12 +411,12 @@ describe('ZhtpApi', () => {
       await api.deployContract({ name: 'MyContract' });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/api/v1/contract/deploy',
+        'http://localhost:8000/api/v1/blockchain/contracts/deploy',
         expect.objectContaining({ method: 'POST' })
       );
     });
 
-    it('executeContract should POST to /api/v1/contract/execute', async () => {
+    it('executeContract should POST to /api/v1/blockchain/contracts/{id}/call', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({ success: true }),
@@ -425,12 +425,12 @@ describe('ZhtpApi', () => {
       await api.executeContract('contract1', 'transfer', ['arg1']);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/api/v1/contract/execute',
+        'http://localhost:8000/api/v1/blockchain/contracts/contract1/call',
         expect.objectContaining({ method: 'POST' })
       );
     });
 
-    it('queryContract should POST to /api/v1/contract/query/{id}', async () => {
+    it('queryContract should GET from /api/v1/blockchain/contracts/{id}/state', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({ result: 'data' }),
@@ -439,7 +439,7 @@ describe('ZhtpApi', () => {
       await api.queryContract('contract1', 'balanceOf', ['account']);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/contract/query/contract1'),
+        expect.stringContaining('/api/v1/blockchain/contracts/contract1/state'),
         expect.any(Object)
       );
     });
@@ -480,7 +480,7 @@ describe('ZhtpApi', () => {
       global.fetch = vi.fn();
     });
 
-    it('getNetworkInfo should GET from /mesh/peers', async () => {
+    it('getNetworkInfo should GET from /api/v1/blockchain/network/peers', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({}),
@@ -489,12 +489,12 @@ describe('ZhtpApi', () => {
       await api.getNetworkInfo();
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/mesh/peers',
+        'http://localhost:8000/api/v1/blockchain/network/peers',
         expect.any(Object)
       );
     });
 
-    it('getBlockchainInfo should GET from /blockchain/info', async () => {
+    it('getBlockchainInfo should GET from /api/v1/blockchain/status', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({}),
@@ -503,12 +503,12 @@ describe('ZhtpApi', () => {
       await api.getBlockchainInfo();
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/blockchain/info',
+        'http://localhost:8000/api/v1/blockchain/status',
         expect.any(Object)
       );
     });
 
-    it('getGasInfo should GET from /network/gas', async () => {
+    it('getGasInfo should GET from /api/v1/network/gas', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({}),
@@ -517,12 +517,12 @@ describe('ZhtpApi', () => {
       await api.getGasInfo();
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/network/gas',
+        'http://localhost:8000/api/v1/network/gas',
         expect.any(Object)
       );
     });
 
-    it('getNodeStatus should GET from /node/status', async () => {
+    it('getNodeStatus should GET from /api/v1/protocol/info', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({}),
@@ -531,12 +531,12 @@ describe('ZhtpApi', () => {
       await api.getNodeStatus();
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/node/status',
+        'http://localhost:8000/api/v1/protocol/info',
         expect.any(Object)
       );
     });
 
-    it('getMeshPeers should GET from /mesh/peers', async () => {
+    it('getMeshPeers should GET from /api/v1/blockchain/network/peers', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({ peers: ['p1'], count: 1 }),

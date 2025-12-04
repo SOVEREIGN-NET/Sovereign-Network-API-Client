@@ -184,7 +184,7 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       const result = await api.createProposal(proposalData);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/dao/proposals',
+        'http://localhost:8000/api/v1/dao/proposals',
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify(proposalData),
@@ -215,7 +215,7 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       const result = await api.getProposalDetails('prop-456');
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/dao/proposals/prop-456',
+        'http://localhost:8000/api/v1/dao/proposals/prop-456',
         expect.any(Object)
       );
       expect(result.executionData).toBeDefined();
@@ -232,7 +232,7 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       const result = await api.getDaoData();
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/dao/data',
+        'http://localhost:8000/api/v1/dao/data',
         expect.any(Object)
       );
       expect(result.participants).toBe(1000);
@@ -279,7 +279,7 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       const result = await api.getDelegateProfile('del-2');
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/dao/delegates/del-2',
+        'http://localhost:8000/api/v1/dao/delegates/del-2',
         expect.any(Object)
       );
       expect(result.reputation).toBe(98);
@@ -304,7 +304,7 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       const result = await api.registerDelegate('did:user', delegateInfo);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/dao/delegates/register',
+        'http://localhost:8000/api/v1/dao/delegates/register',
         expect.objectContaining({
           body: JSON.stringify({ userDid: 'did:user', delegateInfo }),
         })
@@ -321,7 +321,7 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       await api.revokeDelegation('did:user');
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/dao/delegates/revoke',
+        'http://localhost:8000/api/v1/dao/delegates/revoke',
         expect.objectContaining({
           body: JSON.stringify({ userDid: 'did:user' }),
         })
@@ -374,7 +374,7 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       const result = await api.createSpendingProposal(proposalData);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/dao/proposals/spending',
+        'http://localhost:8000/api/v1/dao/proposals/spending',
         expect.any(Object)
       );
       expect(result.title).toBe('Spending');
