@@ -41,6 +41,13 @@ import {
   GenerateProofRequest,
   GenerateProofResponse,
   VerifyProofResponse,
+  WalletListResponse,
+  WalletBalanceResponse,
+  DetailedWalletInfo,
+  SimpleSendRequest,
+  CrossWalletTransferRequest,
+  StakingRequest,
+  TransactionHistoryResponse,
 } from './types';
 
 export abstract class ZhtpApiMethods extends ZhtpApiCore {
@@ -488,43 +495,165 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
 
   // ==================== Wallet & Transaction Operations ====================
 
+  /**
+   * List all wallets for an identity
+   * @param identityId - Identity ID (hex string)
+   * @returns List of all wallets with balances and permissions
+   */
+  async getWalletList(identityId: string): Promise<WalletListResponse> {
+    return this.request<WalletListResponse>(`/api/v1/wallet/list/${identityId}`);
+  }
+
+  /**
+   * Get balance for a specific wallet type
+   * @param walletType - Wallet type (Primary, UBI, Savings, Staking, etc.)
+   * @param identityId - Identity ID (hex string)
+   * @returns Detailed balance information for the wallet
+   */
+  async getWalletBalance(walletType: string, identityId: string): Promise<WalletBalanceResponse> {
+    return this.request<WalletBalanceResponse>(`/api/v1/wallet/balance/${walletType}/${identityId}`);
+  }
+
+  /**
+   * Get comprehensive wallet statistics for an identity
+   * @param identityId - Identity ID (hex string)
+   * @returns Wallet statistics
+   */
+  async getWalletStatistics(identityId: string): Promise<any> {
+    return this.request<any>(`/api/v1/wallet/statistics/${identityId}`);
+  }
+
+  /**
+   * Get transaction history for an identity
+   * @param identityId - Identity ID (hex string)
+   * @returns Transaction history
+   */
+  async getWalletTransactionHistory(identityId: string): Promise<TransactionHistoryResponse> {
+    return this.request<TransactionHistoryResponse>(`/api/v1/wallet/transactions/${identityId}`);
+  }
+
+  /**
+   * Send a simple payment from primary wallet
+   * @param request - Send request with from_identity, to_address, amount, memo
+   * @returns Transaction result
+   */
+  async sendWalletPayment(request: SimpleSendRequest): Promise<any> {
+    return this.request<any>('/api/v1/wallet/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+  }
+
+  /**
+   * Transfer tokens between wallets of the same identity
+   * @param request - Transfer request with identity_id, from_wallet, to_wallet, amount, purpose
+   * @returns Transfer result with transaction ID
+   */
+  async transferBetweenWallets(request: CrossWalletTransferRequest): Promise<any> {
+    return this.request<any>('/api/v1/wallet/transfer/cross-wallet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+  }
+
+  /**
+   * Stake tokens from Primary wallet to Staking wallet
+   * @param identityId - Identity ID (hex string)
+   * @param amount - Amount to stake
+   * @returns Staking result
+   */
+  async stakeTokens(identityId: string, amount: number): Promise<any> {
+    const request: StakingRequest = {
+      identity_id: identityId,
+      amount: amount,
+    };
+    return this.request<any>('/api/v1/wallet/staking/stake', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+  }
+
+  /**
+   * Unstake tokens from Staking wallet back to Primary wallet
+   * @param identityId - Identity ID (hex string)
+   * @param amount - Amount to unstake
+   * @returns Unstaking result
+   */
+  async unstakeTokens(identityId: string, amount: number): Promise<any> {
+    const request: StakingRequest = {
+      identity_id: identityId,
+      amount: amount,
+    };
+    return this.request<any>('/api/v1/wallet/staking/unstake', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+  }
+
+  // Legacy methods (kept for backward compatibility)
+
+  /**
+   * @deprecated Use getWalletList() instead
+   */
   async getWallets(did: string): Promise<Wallet[]> {
-    return this.request<Wallet[]>(
-      `/api/v1/wallet/balance?address=${encodeURIComponent(did)}`
-    );
+    const response = await this.getWalletList(did);
+    return response.wallets.map(w => ({
+      id: w.wallet_id,
+      name: w.wallet_type,
+      balance: w.total_balance,
+      address: w.wallet_id,
+    }));
   }
 
-  async getWalletBalance(did: string): Promise<number> {
-    const wallets = await this.getWallets(did);
-    return wallets.reduce((sum, w) => sum + w.balance, 0);
-  }
-
-  async getTransactionHistory(
-    address: string,
-    walletType?: string
-  ): Promise<Transaction[]> {
-    let endpoint = `/api/v1/wallet/transactions?address=${encodeURIComponent(address)}`;
-    if (walletType) {
-      endpoint += `&wallet_type=${encodeURIComponent(walletType)}`;
-    }
-    return this.request<Transaction[]>(endpoint);
+  /**
+   * @deprecated Use getWalletTransactionHistory() instead
+   */
+  async getTransactionHistory(address: string, walletType?: string): Promise<Transaction[]> {
+    const response = await this.getWalletTransactionHistory(address);
+    return response.transactions.map(tx => ({
+      id: tx.tx_hash,
+      from: tx.from_wallet || '',
+      to: tx.to_address || '',
+      amount: tx.amount,
+      status: tx.status as 'pending' | 'confirmed' | 'failed',
+      timestamp: new Date(tx.timestamp * 1000).toISOString(),
+      blockNumber: tx.block_height || undefined,
+      hash: tx.tx_hash,
+    }));
   }
 
   async getAssets(address: string): Promise<Asset[]> {
     return this.request<Asset[]>(`/api/v1/wallet/assets?address=${encodeURIComponent(address)}`);
   }
 
+  /**
+   * @deprecated Use sendWalletPayment() instead
+   */
   async sendTransaction(
     from: string,
     to: string,
     amount: number,
     metadata?: Record<string, any>
   ): Promise<Transaction> {
-    return this.request<Transaction>('/api/v1/wallet/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from, to, amount, metadata }),
-    });
+    const request: SimpleSendRequest = {
+      from_identity: from,
+      to_address: to,
+      amount: amount,
+      memo: metadata ? JSON.stringify(metadata) : undefined,
+    };
+    const result = await this.sendWalletPayment(request);
+    return {
+      id: result.transaction?.transaction_id || '',
+      from: from,
+      to: to,
+      amount: amount,
+      status: 'pending',
+      timestamp: new Date().toISOString(),
+    };
   }
 
   // ==================== DAO Operations ====================

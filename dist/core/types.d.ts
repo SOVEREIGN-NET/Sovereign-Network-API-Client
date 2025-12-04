@@ -341,4 +341,77 @@ export interface VerifyProofResponse {
     claim: ProofType;
     verified_at: number;
 }
+export interface WalletPermissions {
+    can_transfer_external: boolean;
+    can_vote: boolean;
+    can_stake: boolean;
+    can_receive_rewards: boolean;
+    daily_transaction_limit: number;
+    requires_multisig_threshold: number | null;
+}
+export interface DetailedWalletInfo {
+    wallet_type: string;
+    wallet_id: string;
+    available_balance: number;
+    staked_balance: number;
+    pending_rewards: number;
+    total_balance: number;
+    permissions: WalletPermissions;
+    created_at: number;
+    description: string;
+}
+export interface WalletListResponse {
+    status: string;
+    identity_id: string;
+    total_wallets: number;
+    total_balance: number;
+    wallets: DetailedWalletInfo[];
+}
+export interface WalletBalanceResponse {
+    status: string;
+    wallet_type: string;
+    identity_id: string;
+    balance: {
+        available_balance: number;
+        staked_balance: number;
+        pending_rewards: number;
+        total_balance: number;
+    };
+    permissions: WalletPermissions;
+    created_at: number;
+}
+export interface SimpleSendRequest {
+    from_identity: string;
+    to_address: string;
+    amount: number;
+    memo?: string;
+}
+export interface CrossWalletTransferRequest {
+    identity_id: string;
+    from_wallet: string;
+    to_wallet: string;
+    amount: number;
+    purpose?: string;
+}
+export interface StakingRequest {
+    identity_id: string;
+    amount: number;
+}
+export interface TransactionRecord {
+    tx_hash: string;
+    tx_type: string;
+    amount: number;
+    fee: number;
+    from_wallet: string | null;
+    to_address: string | null;
+    timestamp: number;
+    block_height: number | null;
+    status: string;
+    memo: string | null;
+}
+export interface TransactionHistoryResponse {
+    identity_id: string;
+    total_transactions: number;
+    transactions: TransactionRecord[];
+}
 //# sourceMappingURL=types.d.ts.map

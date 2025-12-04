@@ -3,7 +3,7 @@
  * All API method implementations for various operations
  */
 import { ZhtpApiCore } from './zhtp-api-core';
-import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, GasInfo, SignupRequest, LoginRequest, BackupData, BackupVerification, BackupStatus, ImportBackupResponse, SeedVerification, SeedPhrases, Guardian, GuardianResponse, RecoverySession, RecoveryStatus, CitizenshipResult, ProofData, GenerateProofRequest, VerifyProofResponse } from './types';
+import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, GasInfo, SignupRequest, LoginRequest, BackupData, BackupVerification, BackupStatus, ImportBackupResponse, SeedVerification, SeedPhrases, Guardian, GuardianResponse, RecoverySession, RecoveryStatus, CitizenshipResult, ProofData, GenerateProofRequest, VerifyProofResponse, WalletListResponse, WalletBalanceResponse, SimpleSendRequest, CrossWalletTransferRequest, TransactionHistoryResponse } from './types';
 export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
     signIn(did: string, passphrase: string): Promise<Identity>;
     createIdentity(data: any): Promise<Identity>;
@@ -117,10 +117,69 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
         identity: Identity;
     }>;
     getNetworkInfo(): Promise<NetworkStatus>;
+    /**
+     * List all wallets for an identity
+     * @param identityId - Identity ID (hex string)
+     * @returns List of all wallets with balances and permissions
+     */
+    getWalletList(identityId: string): Promise<WalletListResponse>;
+    /**
+     * Get balance for a specific wallet type
+     * @param walletType - Wallet type (Primary, UBI, Savings, Staking, etc.)
+     * @param identityId - Identity ID (hex string)
+     * @returns Detailed balance information for the wallet
+     */
+    getWalletBalance(walletType: string, identityId: string): Promise<WalletBalanceResponse>;
+    /**
+     * Get comprehensive wallet statistics for an identity
+     * @param identityId - Identity ID (hex string)
+     * @returns Wallet statistics
+     */
+    getWalletStatistics(identityId: string): Promise<any>;
+    /**
+     * Get transaction history for an identity
+     * @param identityId - Identity ID (hex string)
+     * @returns Transaction history
+     */
+    getWalletTransactionHistory(identityId: string): Promise<TransactionHistoryResponse>;
+    /**
+     * Send a simple payment from primary wallet
+     * @param request - Send request with from_identity, to_address, amount, memo
+     * @returns Transaction result
+     */
+    sendWalletPayment(request: SimpleSendRequest): Promise<any>;
+    /**
+     * Transfer tokens between wallets of the same identity
+     * @param request - Transfer request with identity_id, from_wallet, to_wallet, amount, purpose
+     * @returns Transfer result with transaction ID
+     */
+    transferBetweenWallets(request: CrossWalletTransferRequest): Promise<any>;
+    /**
+     * Stake tokens from Primary wallet to Staking wallet
+     * @param identityId - Identity ID (hex string)
+     * @param amount - Amount to stake
+     * @returns Staking result
+     */
+    stakeTokens(identityId: string, amount: number): Promise<any>;
+    /**
+     * Unstake tokens from Staking wallet back to Primary wallet
+     * @param identityId - Identity ID (hex string)
+     * @param amount - Amount to unstake
+     * @returns Unstaking result
+     */
+    unstakeTokens(identityId: string, amount: number): Promise<any>;
+    /**
+     * @deprecated Use getWalletList() instead
+     */
     getWallets(did: string): Promise<Wallet[]>;
-    getWalletBalance(did: string): Promise<number>;
+    /**
+     * @deprecated Use getWalletTransactionHistory() instead
+     */
     getTransactionHistory(address: string, walletType?: string): Promise<Transaction[]>;
     getAssets(address: string): Promise<Asset[]>;
+    /**
+     * @deprecated Use sendWalletPayment() instead
+     */
     sendTransaction(from: string, to: string, amount: number, metadata?: Record<string, any>): Promise<Transaction>;
     getDaoProposals(): Promise<DaoProposal[]>;
     getDaoStats(): Promise<DaoStats>;
