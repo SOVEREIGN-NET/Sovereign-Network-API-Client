@@ -37,6 +37,10 @@ import {
   RecoverySession,
   RecoveryStatus,
   CitizenshipResult,
+  ProofData,
+  GenerateProofRequest,
+  GenerateProofResponse,
+  VerifyProofResponse,
 } from './types';
 
 export abstract class ZhtpApiMethods extends ZhtpApiCore {
@@ -792,26 +796,59 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
 
   // ==================== Zero-Knowledge Proof Operations ====================
 
-  async generateZkProof(data: Record<string, any>): Promise<Proof> {
-    return this.request<Proof>('/api/v1/zkp/generate', {
+  /**
+   * Generate a zero-knowledge proof for privacy-preserving credential verification
+   *
+   * Supported proof types:
+   * - age_over_18: Prove age >= 18 without revealing exact age
+   * - age_range: Prove age in range (18-25, 26-40, 41-65, 66+) without revealing exact age
+   * - citizenship_verified: Prove verified citizen status without revealing identity
+   * - jurisdiction_membership: Prove membership in jurisdiction without revealing personal data
+   *
+   * @param request - Proof generation request with identity_id, proof_type, and credential_data
+   * @param sessionToken - Session token for authentication
+   * @returns Generated proof data with 24-hour expiration
+   *
+   * @example
+   * const proof = await client.generateZkProof({
+   *   identity_id: myIdentity.id,
+   *   proof_type: "age_over_18",
+   *   credential_data: { age: 25 }
+   * }, sessionToken);
+   */
+  async generateZkProof(request: GenerateProofRequest, sessionToken: string): Promise<ProofData> {
+    const response = await this.request<GenerateProofResponse>('/api/v1/zkp/generate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${sessionToken}`
+      },
+      body: JSON.stringify(request),
     });
+    return response.proof;
   }
 
-  async verifyZkProof(proof: Proof): Promise<boolean> {
-    try {
-      const response = await this.request<{ valid: boolean }>('/api/v1/zkp/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(proof),
-      });
-      return response.valid || false;
-    } catch (error) {
-      console.warn('⚠️ Failed to verify zero-knowledge proof:', error);
-      return false;
-    }
+  /**
+   * Verify a zero-knowledge proof
+   *
+   * Validates that a proof is cryptographically sound and has not expired.
+   * Does NOT reveal the underlying credential values.
+   *
+   * @param proof - Proof data to verify
+   * @returns Verification result with validity status and claim type
+   *
+   * @example
+   * const verification = await client.verifyZkProof(proof);
+   * if (verification.valid) {
+   *   console.log(`Verified claim: ${verification.claim}`);
+   * }
+   */
+  async verifyZkProof(proof: ProofData): Promise<VerifyProofResponse> {
+    return this.request<VerifyProofResponse>('/api/v1/zkp/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ proof }),
+    });
   }
 
   // ==================== Connection Management ====================
