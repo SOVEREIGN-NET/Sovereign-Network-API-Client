@@ -379,7 +379,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
 
   async getWallets(did: string): Promise<Wallet[]> {
     return this.request<Wallet[]>(
-      `/wallet/balance?address=${encodeURIComponent(did)}`
+      `/api/v1/wallet/balance?address=${encodeURIComponent(did)}`
     );
   }
 
@@ -392,7 +392,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
     address: string,
     walletType?: string
   ): Promise<Transaction[]> {
-    let endpoint = `/wallet/transactions?address=${encodeURIComponent(address)}`;
+    let endpoint = `/api/v1/wallet/transactions?address=${encodeURIComponent(address)}`;
     if (walletType) {
       endpoint += `&wallet_type=${encodeURIComponent(walletType)}`;
     }
@@ -400,7 +400,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
   }
 
   async getAssets(address: string): Promise<Asset[]> {
-    return this.request<Asset[]>(`/wallet/assets?address=${encodeURIComponent(address)}`);
+    return this.request<Asset[]>(`/api/v1/wallet/assets?address=${encodeURIComponent(address)}`);
   }
 
   async sendTransaction(
@@ -472,7 +472,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
   }
 
   async getProposalDetails(proposalId: string): Promise<ProposalDetails> {
-    return this.request<ProposalDetails>(`/dao/proposals/${proposalId}`);
+    return this.request<ProposalDetails>(`/api/v1/dao/proposals/${proposalId}`);
   }
 
   async getDaoData(): Promise<Record<string, any>> {
@@ -484,7 +484,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
   }
 
   async getDelegateProfile(delegateId: string): Promise<Delegate> {
-    return this.request<Delegate>(`/dao/delegates/${delegateId}`);
+    return this.request<Delegate>(`/api/v1/dao/delegates/${delegateId}`);
   }
 
   async registerDelegate(userDid: string, delegateInfo: Record<string, any>): Promise<Delegate> {
@@ -518,7 +518,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
   async getVotingPower(userDid: string): Promise<number> {
     try {
       const response = await this.request<{ votingPower: number }>(
-        `/dao/voting-power/${userDid}`
+        `/api/v1/dao/voting-power/${userDid}`
       );
       return response.votingPower || 0;
     } catch (error) {
@@ -529,7 +529,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
 
   async getUserVotes(userDid: string): Promise<Array<{ proposalId: string; vote: boolean }>> {
     return this.request<Array<{ proposalId: string; vote: boolean }>>(
-      `/dao/user-votes/${userDid}`
+      `/api/v1/dao/user-votes/${userDid}`
     );
   }
 

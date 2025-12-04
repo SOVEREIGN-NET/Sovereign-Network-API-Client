@@ -3,7 +3,7 @@
  * All API method implementations for various operations
  */
 import { ZhtpApiCore } from './zhtp-api-core';
-import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, Proof, SignupRequest, LoginRequest, BackupData, BackupVerification, SeedVerification, SeedPhrases, Guardian, GuardianResponse, RecoverySession, RecoveryStatus, CitizenshipResult } from './types';
+import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, GasInfo, Proof, SignupRequest, LoginRequest, BackupData, BackupVerification, SeedVerification, SeedPhrases, Guardian, GuardianResponse, RecoverySession, RecoveryStatus, CitizenshipResult } from './types';
 export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
     signIn(did: string, passphrase: string): Promise<Identity>;
     createIdentity(data: any): Promise<Identity>;
@@ -77,11 +77,25 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
     resolveDapp(domain: string): Promise<any>;
     loadWeb4Resource(url: string): Promise<Record<string, any>>;
     getContractContent(contractId: string, path?: string): Promise<any>;
-    getContractByHash(hash: string): Promise<any>;
+    /**
+     * Lookup contract by blockchain transaction hash
+     * @param hash - Deployment transaction hash
+     */
+    getContractByHash(hash: string): Promise<SmartContract>;
     getContractById(contractId: string): Promise<SmartContract>;
     resolveDomain(domainName: string): Promise<DApp>;
+    /**
+     * Resolve Web4 domain via DHT network
+     * @param domain - Domain name (e.g., "example.zhtp")
+     */
+    resolveWeb4ViaDht(domain: string): Promise<DApp>;
+    /**
+     * Get contract from DHT distributed storage
+     * @param contractId - Contract identifier
+     */
+    getContractFromDht(contractId: string): Promise<SmartContract>;
     getBlockchainInfo(): Promise<any>;
-    getGasInfo(): Promise<any>;
+    getGasInfo(): Promise<GasInfo>;
     getNodeStatus(): Promise<NodeStatus>;
     getMeshPeers(): Promise<{
         peers: string[];

@@ -286,28 +286,28 @@ export class ZhtpApiMethods extends ZhtpApiCore {
     }
     // ==================== Network Operations ====================
     async getNetworkInfo() {
-        return this.request('/mesh/peers');
+        return this.request('/api/v1/blockchain/network/peers');
     }
     // ==================== Wallet & Transaction Operations ====================
     async getWallets(did) {
-        return this.request(`/wallet/balance?address=${encodeURIComponent(did)}`);
+        return this.request(`/api/v1/wallet/balance?address=${encodeURIComponent(did)}`);
     }
     async getWalletBalance(did) {
         const wallets = await this.getWallets(did);
         return wallets.reduce((sum, w) => sum + w.balance, 0);
     }
     async getTransactionHistory(address, walletType) {
-        let endpoint = `/wallet/transactions?address=${encodeURIComponent(address)}`;
+        let endpoint = `/api/v1/wallet/transactions?address=${encodeURIComponent(address)}`;
         if (walletType) {
             endpoint += `&wallet_type=${encodeURIComponent(walletType)}`;
         }
         return this.request(endpoint);
     }
     async getAssets(address) {
-        return this.request(`/wallet/assets?address=${encodeURIComponent(address)}`);
+        return this.request(`/api/v1/wallet/assets?address=${encodeURIComponent(address)}`);
     }
     async sendTransaction(from, to, amount, metadata) {
-        return this.request('/wallet/send', {
+        return this.request('/api/v1/wallet/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ from, to, amount, metadata }),
@@ -315,7 +315,7 @@ export class ZhtpApiMethods extends ZhtpApiCore {
     }
     // ==================== DAO Operations ====================
     async getDaoProposals() {
-        return this.request('/dao/proposals');
+        return this.request('/api/v1/dao/proposals/list');
     }
     async getDaoStats() {
         const [proposals, treasury, delegates] = await Promise.all([
@@ -339,54 +339,54 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         };
     }
     async createProposal(proposal) {
-        return this.request('/dao/proposals', {
+        return this.request('/api/v1/dao/proposals', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(proposal),
         });
     }
     async submitVote(proposalId, vote, voterDid) {
-        await this.request('/dao/vote', {
+        await this.request('/api/v1/dao/vote/cast', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ proposalId, vote, voterDid }),
         });
     }
     async getDaoTreasury() {
-        const response = await this.request('/dao/treasury');
+        const response = await this.request('/api/v1/dao/treasury/balance');
         return response?.balance || 0;
     }
     async getProposalDetails(proposalId) {
-        return this.request(`/dao/proposals/${proposalId}`);
+        return this.request(`/api/v1/dao/proposals/${proposalId}`);
     }
     async getDaoData() {
-        return this.request('/dao/data');
+        return this.request('/api/v1/dao/data');
     }
     async getDaoDelegates() {
-        return this.request('/dao/delegates');
+        return this.request('/api/v1/dao/delegates');
     }
     async getDelegateProfile(delegateId) {
-        return this.request(`/dao/delegates/${delegateId}`);
+        return this.request(`/api/v1/dao/delegates/${delegateId}`);
     }
     async registerDelegate(userDid, delegateInfo) {
-        return this.request('/dao/delegates/register', {
+        return this.request('/api/v1/dao/delegates/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userDid, delegateInfo }),
         });
     }
     async revokeDelegation(userDid) {
-        await this.request('/dao/delegates/revoke', {
+        await this.request('/api/v1/dao/delegates/revoke', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userDid }),
         });
     }
     async getTreasuryHistory() {
-        return this.request('/dao/treasury/history');
+        return this.request('/api/v1/dao/treasury/history');
     }
     async createSpendingProposal(proposalData) {
-        return this.request('/dao/proposals/spending', {
+        return this.request('/api/v1/dao/proposals/spending', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(proposalData),
@@ -394,7 +394,7 @@ export class ZhtpApiMethods extends ZhtpApiCore {
     }
     async getVotingPower(userDid) {
         try {
-            const response = await this.request(`/dao/voting-power/${userDid}`);
+            const response = await this.request(`/api/v1/dao/voting-power/${userDid}`);
             return response.votingPower || 0;
         }
         catch (error) {
@@ -403,7 +403,7 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         }
     }
     async getUserVotes(userDid) {
-        return this.request(`/dao/user-votes/${userDid}`);
+        return this.request(`/api/v1/dao/user-votes/${userDid}`);
     }
     // ==================== Web4/DHT Operations ====================
     async resolveDapp(domain) {
@@ -423,6 +423,10 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         }
         return this.request(endpoint);
     }
+    /**
+     * Lookup contract by blockchain transaction hash
+     * @param hash - Deployment transaction hash
+     */
     async getContractByHash(hash) {
         return this.request(`/api/v1/blockchain/contract/${hash}`);
     }
@@ -432,18 +436,32 @@ export class ZhtpApiMethods extends ZhtpApiCore {
     async resolveDomain(domainName) {
         return this.request(`/api/v1/web4/resolve/${encodeURIComponent(domainName)}`);
     }
+    /**
+     * Resolve Web4 domain via DHT network
+     * @param domain - Domain name (e.g., "example.zhtp")
+     */
+    async resolveWeb4ViaDht(domain) {
+        return this.request(`/api/v1/dht/web4/resolve/${encodeURIComponent(domain)}`);
+    }
+    /**
+     * Get contract from DHT distributed storage
+     * @param contractId - Contract identifier
+     */
+    async getContractFromDht(contractId) {
+        return this.request(`/api/v1/dht/contract/${contractId}`);
+    }
     // ==================== Blockchain Operations ====================
     async getBlockchainInfo() {
-        return this.request('/blockchain/info');
+        return this.request('/api/v1/blockchain/status');
     }
     async getGasInfo() {
-        return this.request('/network/gas');
+        return this.request('/api/v1/network/gas');
     }
     async getNodeStatus() {
-        return this.request('/node/status');
+        return this.request('/api/v1/protocol/info');
     }
     async getMeshPeers() {
-        return this.request('/mesh/peers');
+        return this.request('/api/v1/blockchain/network/peers');
     }
     async getNetworkStats() {
         try {
@@ -466,28 +484,22 @@ export class ZhtpApiMethods extends ZhtpApiCore {
     }
     // ==================== Smart Contract Operations ====================
     async deployContract(contractData, options) {
-        return this.request('/api/v1/contract/deploy', {
+        return this.request('/api/v1/blockchain/contracts/deploy', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ...contractData, ...options }),
         });
     }
     async executeContract(contractId, functionName, args) {
-        return this.request('/api/v1/contract/execute', {
+        return this.request(`/api/v1/blockchain/contracts/${contractId}/call`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contractId, functionName, args }),
+            body: JSON.stringify({ functionName, args }),
         });
     }
     async queryContract(contractId, functionName, args) {
-        let endpoint = `/api/v1/contract/query/${contractId}`;
-        if (functionName) {
-            endpoint += `/${functionName}`;
-        }
-        return this.request(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ args }),
+        return this.request(`/api/v1/blockchain/contracts/${contractId}/state`, {
+            method: 'GET',
         });
     }
     async getContractMetadata(contractId) {
@@ -536,7 +548,7 @@ export class ZhtpApiMethods extends ZhtpApiCore {
     // ==================== Protocol Information ====================
     async getProtocolInfo() {
         try {
-            const response = await this.request('/node/status');
+            const response = await this.request('/api/v1/protocol/info');
             return {
                 success: true,
                 protocol: 'ZHTP/1.0',
