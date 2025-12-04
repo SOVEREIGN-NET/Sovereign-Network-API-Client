@@ -413,25 +413,30 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         };
     }
     async createProposal(proposal) {
-        return this.request('/api/v1/dao/proposals', {
+        return this.request('/api/v1/dao/proposal/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(proposal),
         });
     }
-    async submitVote(proposalId, vote, voterDid) {
+    async submitVote(voterIdentityId, proposalId, voteChoice, justification) {
         await this.request('/api/v1/dao/vote/cast', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ proposalId, vote, voterDid }),
+            body: JSON.stringify({
+                voter_identity_id: voterIdentityId,
+                proposal_id: proposalId,
+                vote_choice: voteChoice,
+                justification
+            }),
         });
     }
     async getDaoTreasury() {
-        const response = await this.request('/api/v1/dao/treasury/balance');
-        return response?.balance || 0;
+        const response = await this.request('/api/v1/dao/treasury/status');
+        return response?.treasury?.total_balance || 0;
     }
     async getProposalDetails(proposalId) {
-        return this.request(`/api/v1/dao/proposals/${proposalId}`);
+        return this.request(`/api/v1/dao/proposal/${proposalId}`);
     }
     async getDaoData() {
         return this.request('/api/v1/dao/data');
@@ -446,18 +451,26 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         return this.request('/api/v1/dao/delegates/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userDid, delegateInfo }),
+            body: JSON.stringify({ user_did: userDid, delegate_info: delegateInfo }),
         });
     }
     async revokeDelegation(userDid) {
         await this.request('/api/v1/dao/delegates/revoke', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userDid }),
+            body: JSON.stringify({ user_did: userDid }),
         });
     }
-    async getTreasuryHistory() {
-        return this.request('/api/v1/dao/treasury/history');
+    async getTreasuryHistory(limit, offset) {
+        const params = new URLSearchParams();
+        if (limit)
+            params.append('limit', limit.toString());
+        if (offset)
+            params.append('offset', offset.toString());
+        const queryString = params.toString();
+        const url = `/api/v1/dao/treasury/transactions${queryString ? '?' + queryString : ''}`;
+        const response = await this.request(url);
+        return response?.transactions || [];
     }
     async createSpendingProposal(proposalData) {
         return this.request('/api/v1/dao/proposals/spending', {

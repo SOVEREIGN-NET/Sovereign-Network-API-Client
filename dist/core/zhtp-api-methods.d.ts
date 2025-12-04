@@ -125,15 +125,18 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
     getDaoProposals(): Promise<DaoProposal[]>;
     getDaoStats(): Promise<DaoStats>;
     createProposal(proposal: any): Promise<DaoProposal>;
-    submitVote(proposalId: string, vote: boolean, voterDid: string): Promise<void>;
+    submitVote(voterIdentityId: string, proposalId: string, voteChoice: 'yes' | 'no' | 'abstain', justification?: string): Promise<void>;
     getDaoTreasury(): Promise<number>;
     getProposalDetails(proposalId: string): Promise<ProposalDetails>;
     getDaoData(): Promise<Record<string, any>>;
     getDaoDelegates(): Promise<Delegate[]>;
     getDelegateProfile(delegateId: string): Promise<Delegate>;
-    registerDelegate(userDid: string, delegateInfo: Record<string, any>): Promise<Delegate>;
+    registerDelegate(userDid: string, delegateInfo: {
+        name: string;
+        bio: string;
+    }): Promise<Delegate>;
     revokeDelegation(userDid: string): Promise<void>;
-    getTreasuryHistory(): Promise<TreasuryRecord[]>;
+    getTreasuryHistory(limit?: number, offset?: number): Promise<TreasuryRecord[]>;
     createSpendingProposal(proposalData: Record<string, any>): Promise<DaoProposal>;
     getVotingPower(userDid: string): Promise<number>;
     getUserVotes(userDid: string): Promise<Array<{
