@@ -284,41 +284,29 @@ export interface BackupStatus {
 }
 export interface Guardian {
     guardian_id: string;
-    guardian_name?: string;
-    status: 'pending' | 'active' | 'revoked';
+    guardian_did: string;
+    name: string;
     added_at: number;
-    relationship?: string;
+    status: string;
 }
 export interface GuardianResponse {
     status: string;
     guardian_id: string;
-    message: string;
+    total_guardians: number;
 }
 export interface RecoverySession {
+    status: string;
     recovery_id: string;
-    identity_id: string;
-    status: 'initiated' | 'pending_approvals' | 'completed' | 'cancelled';
-    required_approvals: number;
-    current_approvals: number;
-    guardian_ids: string[];
-    created_at: number;
+    guardians_required: number;
+    guardians_approved: number;
     expires_at: number;
 }
 export interface RecoveryStatus {
     recovery_id: string;
-    status: 'initiated' | 'pending_approvals' | 'completed' | 'cancelled' | 'failed';
-    progress: {
-        required: number;
-        approved: number;
-        declined: number;
-    };
-    guardians: Array<{
-        guardian_id: string;
-        status: 'pending' | 'approved' | 'declined';
-        responded_at?: number;
-    }>;
-    created_at: number;
-    updated_at: number;
+    status: string;
+    approvals: number;
+    required: number;
     expires_at: number;
+    identity_did: string;
 }
 //# sourceMappingURL=types.d.ts.map

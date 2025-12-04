@@ -235,64 +235,78 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         return this.request(`/api/v1/identity/${identityId}/seeds`);
     }
     // ==================== Guardian Management ====================
-    async addGuardian(identityId, guardianId, guardianInfo) {
-        return this.request('/api/v1/guardian/add', {
+    async addGuardian(identityId, sessionToken, guardianDid, guardianPublicKey, guardianName) {
+        return this.request('/api/v1/identity/guardians/add', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 identity_id: identityId,
-                guardian_id: guardianId,
-                ...guardianInfo
+                session_token: sessionToken,
+                guardian_did: guardianDid,
+                guardian_public_key: guardianPublicKey,
+                guardian_name: guardianName
             }),
         });
     }
-    async listGuardians(identityId) {
-        return this.request(`/api/v1/guardian/list/${identityId}`);
-    }
-    async removeGuardian(identityId, guardianId) {
-        await this.request('/api/v1/guardian/remove', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ identity_id: identityId, guardian_id: guardianId }),
+    async listGuardians(sessionToken) {
+        return this.request('/api/v1/identity/guardians', {
+            headers: {
+                'Authorization': `Bearer ${sessionToken}`
+            }
         });
     }
-    async acceptGuardianInvite(guardianId, identityId) {
-        await this.request('/api/v1/guardian/accept', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ guardian_id: guardianId, identity_id: identityId }),
-        });
-    }
-    async declineGuardianInvite(guardianId, identityId) {
-        await this.request('/api/v1/guardian/decline', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ guardian_id: guardianId, identity_id: identityId }),
+    async removeGuardian(guardianId, sessionToken) {
+        await this.request(`/api/v1/identity/guardians/${guardianId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${sessionToken}`
+            }
         });
     }
     // ==================== Guardian Recovery Flow ====================
-    async initiateRecovery(identityId, guardianIds) {
-        return this.request('/api/v1/guardian/recovery/initiate', {
+    async initiateRecovery(identityDid, requesterDevice) {
+        return this.request('/api/v1/identity/recovery/initiate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ identity_id: identityId, guardian_ids: guardianIds }),
+            body: JSON.stringify({ identity_did: identityDid, requester_device: requesterDevice }),
         });
     }
-    async approveRecovery(guardianId, recoveryId, approval) {
-        await this.request('/api/v1/guardian/recovery/approve', {
+    async approveRecovery(recoveryId, guardianDid, sessionToken, signature) {
+        return this.request(`/api/v1/identity/recovery/${recoveryId}/approve`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ guardian_id: guardianId, recovery_id: recoveryId, approval }),
+            body: JSON.stringify({
+                guardian_did: guardianDid,
+                session_token: sessionToken,
+                signature: signature
+            }),
+        });
+    }
+    async rejectRecovery(recoveryId, guardianDid, sessionToken, signature) {
+        await this.request(`/api/v1/identity/recovery/${recoveryId}/reject`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                guardian_did: guardianDid,
+                session_token: sessionToken,
+                signature: signature
+            }),
+        });
+    }
+    async completeRecovery(recoveryId) {
+        return this.request(`/api/v1/identity/recovery/${recoveryId}/complete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
         });
     }
     async getRecoveryStatus(recoveryId) {
-        return this.request(`/api/v1/guardian/recovery/status/${recoveryId}`);
+        return this.request(`/api/v1/identity/recovery/${recoveryId}/status`);
     }
-    async cancelRecovery(recoveryId) {
-        await this.request('/api/v1/guardian/recovery/cancel', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ recovery_id: recoveryId }),
+    async getPendingRecoveries(sessionToken) {
+        return this.request('/api/v1/identity/recovery/pending', {
+            headers: {
+                'Authorization': `Bearer ${sessionToken}`
+            }
         });
     }
     // ==================== Citizenship ====================

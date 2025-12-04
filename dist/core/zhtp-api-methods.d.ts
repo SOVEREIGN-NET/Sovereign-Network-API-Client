@@ -80,15 +80,33 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
      */
     verifySeedPhrase(identityId: string, seedPhrase: string): Promise<SeedVerification>;
     exportSeedPhrases(identityId: string): Promise<SeedPhrases>;
-    addGuardian(identityId: string, guardianId: string, guardianInfo?: Record<string, any>): Promise<GuardianResponse>;
-    listGuardians(identityId: string): Promise<Guardian[]>;
-    removeGuardian(identityId: string, guardianId: string): Promise<void>;
-    acceptGuardianInvite(guardianId: string, identityId: string): Promise<void>;
-    declineGuardianInvite(guardianId: string, identityId: string): Promise<void>;
-    initiateRecovery(identityId: string, guardianIds: string[]): Promise<RecoverySession>;
-    approveRecovery(guardianId: string, recoveryId: string, approval: boolean): Promise<void>;
+    addGuardian(identityId: string, sessionToken: string, guardianDid: string, guardianPublicKey: number[], guardianName: string): Promise<GuardianResponse>;
+    listGuardians(sessionToken: string): Promise<{
+        guardians: Guardian[];
+        threshold: number;
+    }>;
+    removeGuardian(guardianId: string, sessionToken: string): Promise<void>;
+    initiateRecovery(identityDid: string, requesterDevice: string): Promise<RecoverySession>;
+    approveRecovery(recoveryId: string, guardianDid: string, sessionToken: string, signature: number[]): Promise<{
+        status: string;
+        approvals: number;
+        required: number;
+    }>;
+    rejectRecovery(recoveryId: string, guardianDid: string, sessionToken: string, signature: number[]): Promise<void>;
+    completeRecovery(recoveryId: string): Promise<{
+        status: string;
+        session_token: string;
+        identity_did: string;
+    }>;
     getRecoveryStatus(recoveryId: string): Promise<RecoveryStatus>;
-    cancelRecovery(recoveryId: string): Promise<void>;
+    getPendingRecoveries(sessionToken: string): Promise<{
+        pending_requests: Array<{
+            recovery_id: string;
+            identity_did: string;
+            initiated_at: number;
+            expires_at: number;
+        }>;
+    }>;
     applyCitizenship(identityId: string, applicationData?: Record<string, any>): Promise<CitizenshipResult>;
     createZkDid(didData?: Record<string, any>): Promise<any>;
     getIdentity(did: string): Promise<Identity>;
