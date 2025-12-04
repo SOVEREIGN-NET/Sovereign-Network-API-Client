@@ -27,10 +27,57 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
     recoverIdentityFromSeed(recoveryData: Record<string, any>): Promise<Identity>;
     restoreIdentityFromBackup(backupData: Record<string, any>): Promise<Identity>;
     recoverIdentityWithGuardians(guardianData: Record<string, any>): Promise<Identity>;
+    /**
+     * Export encrypted identity backup
+     *
+     * SECURITY WARNINGS:
+     * 1. Use a strong passphrase (minimum 12 characters)
+     * 2. Store backup data securely offline
+     * 3. Never share or log the passphrase
+     * 4. This operation requires an active authenticated session
+     *
+     * @param identityId - Identity ID to backup
+     * @param passphrase - Encryption passphrase (minimum 12 characters)
+     * @returns Encrypted backup data (base64) with creation timestamp
+     * @throws Error if passphrase is too short or session is invalid
+     */
     exportBackup(identityId: string, passphrase: string): Promise<BackupData>;
+    /**
+     * Import and restore identity from encrypted backup
+     *
+     * SECURITY WARNINGS:
+     * 1. This endpoint is rate-limited to 3 attempts per hour per IP
+     * 2. Incorrect passphrase will result in decryption failure
+     * 3. Creates a new session upon successful import
+     *
+     * @param backupData - Encrypted backup data (base64 string from exportBackup)
+     * @param passphrase - Decryption passphrase (same as used for export)
+     * @returns Restored identity info and new session token
+     * @throws Error if passphrase is incorrect or backup is corrupted
+     */
     importBackup(backupData: string, passphrase: string): Promise<ImportBackupResponse>;
     verifyBackup(backupData: string): Promise<BackupVerification>;
+    /**
+     * Get backup status for an identity
+     *
+     * @param identityId - Identity ID to check
+     * @returns Backup status including recovery phrase existence and verification state
+     */
     getBackupStatus(identityId: string): Promise<BackupStatus>;
+    /**
+     * Verify a BIP39 seed phrase for a wallet
+     *
+     * SECURITY WARNINGS:
+     * 1. Seed phrase must be exactly 12 words
+     * 2. Never log or store seed phrases
+     * 3. This endpoint is rate-limited to prevent brute force attacks
+     * 4. Requires active authenticated session
+     *
+     * @param identityId - Identity ID that owns the wallet
+     * @param seedPhrase - 12-word BIP39 seed phrase to verify
+     * @returns Verification result
+     * @throws Error if seed phrase format is invalid
+     */
     verifySeedPhrase(identityId: string, seedPhrase: string): Promise<SeedVerification>;
     exportSeedPhrases(identityId: string): Promise<SeedPhrases>;
     addGuardian(identityId: string, guardianId: string, guardianInfo?: Record<string, any>): Promise<GuardianResponse>;

@@ -312,6 +312,31 @@ describe('ZhtpApi', () => {
         expect.any(Object)
       );
     });
+
+    it('exportBackup should reject passphrase shorter than 12 characters', async () => {
+      await expect(api.exportBackup('test-id', 'short')).rejects.toThrow(
+        'Passphrase must be at least 12 characters'
+      );
+    });
+
+    it('importBackup should reject passphrase shorter than 12 characters', async () => {
+      await expect(api.importBackup('backup-data', 'short')).rejects.toThrow(
+        'Passphrase must be at least 12 characters'
+      );
+    });
+
+    it('verifySeedPhrase should reject seed phrase with wrong word count', async () => {
+      await expect(api.verifySeedPhrase('test-id', 'word1 word2 word3')).rejects.toThrow(
+        'Seed phrase must be exactly 12 words'
+      );
+    });
+
+    it('verifySeedPhrase should reject seed phrase with too many words', async () => {
+      const tooManyWords = Array(15).fill('word').join(' ');
+      await expect(api.verifySeedPhrase('test-id', tooManyWords)).rejects.toThrow(
+        'Seed phrase must be exactly 12 words'
+      );
+    });
   });
 
   describe('API Methods - Wallet', () => {
