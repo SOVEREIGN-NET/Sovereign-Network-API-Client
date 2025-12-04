@@ -48,6 +48,11 @@ import {
   CrossWalletTransferRequest,
   StakingRequest,
   TransactionHistoryResponse,
+  NetworkPeersResponse,
+  NetworkStatsResponse,
+  GasInfoResponse,
+  AddPeerRequest,
+  AddPeerResponse,
 } from './types';
 
 export abstract class ZhtpApiMethods extends ZhtpApiCore {
@@ -489,8 +494,68 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
 
   // ==================== Network Operations ====================
 
+  /**
+   * Get list of connected network peers
+   * @returns Peer information including peer IDs, types, and connection status
+   */
+  async getNetworkPeers(): Promise<NetworkPeersResponse> {
+    return this.request<NetworkPeersResponse>('/api/v1/blockchain/network/peers');
+  }
+
+  /**
+   * Get comprehensive network statistics including mesh status and traffic
+   * @returns Network stats with mesh status, traffic, and peer distribution
+   */
+  async getNetworkStats(): Promise<NetworkStatsResponse> {
+    return this.request<NetworkStatsResponse>('/api/v1/blockchain/network/stats');
+  }
+
+  /**
+   * Get current gas pricing information for transaction cost estimation
+   * @returns Gas prices including base fee, priority fee, and estimated costs
+   */
+  async getGasInfo(): Promise<GasInfoResponse> {
+    return this.request<GasInfoResponse>('/api/v1/network/gas');
+  }
+
+  /**
+   * Add a peer to the network by address
+   * @param request - Peer address and optional peer type
+   * @returns Connection result with peer ID and status
+   */
+  async addNetworkPeer(request: AddPeerRequest): Promise<AddPeerResponse> {
+    return this.request<AddPeerResponse>('/api/v1/blockchain/network/peer/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+  }
+
+  /**
+   * Remove a peer from the network
+   * @param peerId - ID of the peer to remove
+   * @returns Removal result with status
+   */
+  async removeNetworkPeer(peerId: string): Promise<any> {
+    return this.request<any>(`/api/v1/blockchain/network/peer/${peerId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Legacy method (kept for backward compatibility)
+
+  /**
+   * @deprecated Use getNetworkPeers() instead
+   */
   async getNetworkInfo(): Promise<NetworkStatus> {
-    return this.request<NetworkStatus>('/api/v1/blockchain/network/peers');
+    const response = await this.getNetworkPeers();
+    return {
+      peers: response.peer_count,
+      meshConnected: response.peers.length > 0,
+      latency: 0,
+      version: '1.0',
+      quantumResistant: true,
+    };
   }
 
   // ==================== Wallet & Transaction Operations ====================
@@ -847,41 +912,19 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
     return this.request<any>('/api/v1/blockchain/status');
   }
 
-  async getGasInfo(): Promise<GasInfo> {
-    return this.request<GasInfo>('/api/v1/network/gas');
-  }
-
   async getNodeStatus(): Promise<NodeStatus> {
     return this.request<NodeStatus>('/api/v1/protocol/info');
   }
 
+  /**
+   * @deprecated Use getNetworkPeers() instead
+   */
   async getMeshPeers(): Promise<{ peers: string[]; count: number }> {
-    return this.request<{ peers: string[]; count: number }>('/api/v1/blockchain/network/peers');
-  }
-
-  async getNetworkStats(): Promise<{
-    blockchain: Record<string, any>;
-    gas: Record<string, any>;
-    mesh: Record<string, any>;
-    timestamp: string;
-  }> {
-    try {
-      const [blockchainInfo, gasInfo, meshInfo] = await Promise.all([
-        this.getBlockchainInfo().catch(() => ({})),
-        this.getGasInfo().catch(() => ({})),
-        this.getMeshPeers().catch(() => ({ peers: [], count: 0 })),
-      ]);
-
-      return {
-        blockchain: blockchainInfo,
-        gas: gasInfo,
-        mesh: meshInfo,
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      console.warn('⚠️ Failed to get network stats:', error);
-      throw error;
-    }
+    const response = await this.getNetworkPeers();
+    return {
+      peers: response.peers.map(p => p.peer_id),
+      count: response.peer_count,
+    };
   }
 
   // ==================== Smart Contract Operations ====================

@@ -359,8 +359,62 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         });
     }
     // ==================== Network Operations ====================
-    async getNetworkInfo() {
+    /**
+     * Get list of connected network peers
+     * @returns Peer information including peer IDs, types, and connection status
+     */
+    async getNetworkPeers() {
         return this.request('/api/v1/blockchain/network/peers');
+    }
+    /**
+     * Get comprehensive network statistics including mesh status and traffic
+     * @returns Network stats with mesh status, traffic, and peer distribution
+     */
+    async getNetworkStats() {
+        return this.request('/api/v1/blockchain/network/stats');
+    }
+    /**
+     * Get current gas pricing information for transaction cost estimation
+     * @returns Gas prices including base fee, priority fee, and estimated costs
+     */
+    async getGasInfo() {
+        return this.request('/api/v1/network/gas');
+    }
+    /**
+     * Add a peer to the network by address
+     * @param request - Peer address and optional peer type
+     * @returns Connection result with peer ID and status
+     */
+    async addNetworkPeer(request) {
+        return this.request('/api/v1/blockchain/network/peer/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request),
+        });
+    }
+    /**
+     * Remove a peer from the network
+     * @param peerId - ID of the peer to remove
+     * @returns Removal result with status
+     */
+    async removeNetworkPeer(peerId) {
+        return this.request(`/api/v1/blockchain/network/peer/${peerId}`, {
+            method: 'DELETE',
+        });
+    }
+    // Legacy method (kept for backward compatibility)
+    /**
+     * @deprecated Use getNetworkPeers() instead
+     */
+    async getNetworkInfo() {
+        const response = await this.getNetworkPeers();
+        return {
+            peers: response.peer_count,
+            meshConnected: response.peers.length > 0,
+            latency: 0,
+            version: '1.0',
+            quantumResistant: true,
+        };
     }
     // ==================== Wallet & Transaction Operations ====================
     /**
@@ -660,33 +714,18 @@ export class ZhtpApiMethods extends ZhtpApiCore {
     async getBlockchainInfo() {
         return this.request('/api/v1/blockchain/status');
     }
-    async getGasInfo() {
-        return this.request('/api/v1/network/gas');
-    }
     async getNodeStatus() {
         return this.request('/api/v1/protocol/info');
     }
+    /**
+     * @deprecated Use getNetworkPeers() instead
+     */
     async getMeshPeers() {
-        return this.request('/api/v1/blockchain/network/peers');
-    }
-    async getNetworkStats() {
-        try {
-            const [blockchainInfo, gasInfo, meshInfo] = await Promise.all([
-                this.getBlockchainInfo().catch(() => ({})),
-                this.getGasInfo().catch(() => ({})),
-                this.getMeshPeers().catch(() => ({ peers: [], count: 0 })),
-            ]);
-            return {
-                blockchain: blockchainInfo,
-                gas: gasInfo,
-                mesh: meshInfo,
-                timestamp: new Date().toISOString(),
-            };
-        }
-        catch (error) {
-            console.warn('⚠️ Failed to get network stats:', error);
-            throw error;
-        }
+        const response = await this.getNetworkPeers();
+        return {
+            peers: response.peers.map(p => p.peer_id),
+            count: response.peer_count,
+        };
     }
     // ==================== Smart Contract Operations ====================
     async deployContract(contractData, options) {

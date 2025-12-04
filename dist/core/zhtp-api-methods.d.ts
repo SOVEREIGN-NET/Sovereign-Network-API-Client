@@ -3,7 +3,7 @@
  * All API method implementations for various operations
  */
 import { ZhtpApiCore } from './zhtp-api-core';
-import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, GasInfo, SignupRequest, LoginRequest, BackupData, BackupVerification, BackupStatus, ImportBackupResponse, SeedVerification, SeedPhrases, Guardian, GuardianResponse, RecoverySession, RecoveryStatus, CitizenshipResult, ProofData, GenerateProofRequest, VerifyProofResponse, WalletListResponse, WalletBalanceResponse, SimpleSendRequest, CrossWalletTransferRequest, TransactionHistoryResponse } from './types';
+import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, SignupRequest, LoginRequest, BackupData, BackupVerification, BackupStatus, ImportBackupResponse, SeedVerification, SeedPhrases, Guardian, GuardianResponse, RecoverySession, RecoveryStatus, CitizenshipResult, ProofData, GenerateProofRequest, VerifyProofResponse, WalletListResponse, WalletBalanceResponse, SimpleSendRequest, CrossWalletTransferRequest, TransactionHistoryResponse, NetworkPeersResponse, NetworkStatsResponse, GasInfoResponse, AddPeerRequest, AddPeerResponse } from './types';
 export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
     signIn(did: string, passphrase: string): Promise<Identity>;
     createIdentity(data: any): Promise<Identity>;
@@ -116,6 +116,36 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
         token: string;
         identity: Identity;
     }>;
+    /**
+     * Get list of connected network peers
+     * @returns Peer information including peer IDs, types, and connection status
+     */
+    getNetworkPeers(): Promise<NetworkPeersResponse>;
+    /**
+     * Get comprehensive network statistics including mesh status and traffic
+     * @returns Network stats with mesh status, traffic, and peer distribution
+     */
+    getNetworkStats(): Promise<NetworkStatsResponse>;
+    /**
+     * Get current gas pricing information for transaction cost estimation
+     * @returns Gas prices including base fee, priority fee, and estimated costs
+     */
+    getGasInfo(): Promise<GasInfoResponse>;
+    /**
+     * Add a peer to the network by address
+     * @param request - Peer address and optional peer type
+     * @returns Connection result with peer ID and status
+     */
+    addNetworkPeer(request: AddPeerRequest): Promise<AddPeerResponse>;
+    /**
+     * Remove a peer from the network
+     * @param peerId - ID of the peer to remove
+     * @returns Removal result with status
+     */
+    removeNetworkPeer(peerId: string): Promise<any>;
+    /**
+     * @deprecated Use getNetworkPeers() instead
+     */
     getNetworkInfo(): Promise<NetworkStatus>;
     /**
      * List all wallets for an identity
@@ -223,17 +253,13 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
      */
     getContractFromDht(contractId: string): Promise<SmartContract>;
     getBlockchainInfo(): Promise<any>;
-    getGasInfo(): Promise<GasInfo>;
     getNodeStatus(): Promise<NodeStatus>;
+    /**
+     * @deprecated Use getNetworkPeers() instead
+     */
     getMeshPeers(): Promise<{
         peers: string[];
         count: number;
-    }>;
-    getNetworkStats(): Promise<{
-        blockchain: Record<string, any>;
-        gas: Record<string, any>;
-        mesh: Record<string, any>;
-        timestamp: string;
     }>;
     deployContract(contractData: SmartContract, options?: Record<string, any>): Promise<ContractDeploymentResult>;
     executeContract(contractId: string, functionName: string, args?: any[]): Promise<ContractExecutionResult>;
