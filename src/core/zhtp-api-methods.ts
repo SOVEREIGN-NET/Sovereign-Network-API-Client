@@ -558,7 +558,7 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
   }
 
   async createProposal(proposal: any): Promise<DaoProposal> {
-    return this.request<DaoProposal>('/api/v1/dao/proposals', {
+    return this.request<DaoProposal>('/api/v1/dao/proposal/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(proposal),
@@ -566,24 +566,30 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
   }
 
   async submitVote(
+    voterIdentityId: string,
     proposalId: string,
-    vote: boolean,
-    voterDid: string
+    voteChoice: 'yes' | 'no' | 'abstain',
+    justification?: string
   ): Promise<void> {
     await this.request<void>('/api/v1/dao/vote/cast', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ proposalId, vote, voterDid }),
+      body: JSON.stringify({
+        voter_identity_id: voterIdentityId,
+        proposal_id: proposalId,
+        vote_choice: voteChoice,
+        justification
+      }),
     });
   }
 
   async getDaoTreasury(): Promise<number> {
-    const response = await this.request<any>('/api/v1/dao/treasury/balance');
-    return response?.balance || 0;
+    const response = await this.request<any>('/api/v1/dao/treasury/status');
+    return response?.treasury?.total_balance || 0;
   }
 
   async getProposalDetails(proposalId: string): Promise<ProposalDetails> {
-    return this.request<ProposalDetails>(`/api/v1/dao/proposals/${proposalId}`);
+    return this.request<ProposalDetails>(`/api/v1/dao/proposal/${proposalId}`);
   }
 
   async getDaoData(): Promise<Record<string, any>> {
@@ -598,11 +604,11 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
     return this.request<Delegate>(`/api/v1/dao/delegates/${delegateId}`);
   }
 
-  async registerDelegate(userDid: string, delegateInfo: Record<string, any>): Promise<Delegate> {
+  async registerDelegate(userDid: string, delegateInfo: { name: string; bio: string }): Promise<Delegate> {
     return this.request<Delegate>('/api/v1/dao/delegates/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userDid, delegateInfo }),
+      body: JSON.stringify({ user_did: userDid, delegate_info: delegateInfo }),
     });
   }
 
@@ -610,12 +616,18 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
     await this.request<void>('/api/v1/dao/delegates/revoke', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userDid }),
+      body: JSON.stringify({ user_did: userDid }),
     });
   }
 
-  async getTreasuryHistory(): Promise<TreasuryRecord[]> {
-    return this.request<TreasuryRecord[]>('/api/v1/dao/treasury/history');
+  async getTreasuryHistory(limit?: number, offset?: number): Promise<TreasuryRecord[]> {
+    const params = new URLSearchParams();
+    if (limit) params.append('limit', limit.toString());
+    if (offset) params.append('offset', offset.toString());
+    const queryString = params.toString();
+    const url = `/api/v1/dao/treasury/transactions${queryString ? '?' + queryString : ''}`;
+    const response = await this.request<any>(url);
+    return response?.transactions || [];
   }
 
   async createSpendingProposal(proposalData: Record<string, any>): Promise<DaoProposal> {
