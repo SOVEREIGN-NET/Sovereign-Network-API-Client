@@ -142,18 +142,18 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         });
     }
     // ==================== Backup Operations ====================
-    async exportBackup(identityId, password) {
+    async exportBackup(identityId, passphrase) {
         return this.request('/api/v1/identity/backup/export', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ identity_id: identityId, password }),
+            body: JSON.stringify({ identity_id: identityId, passphrase }),
         });
     }
-    async importBackup(backupData, password) {
+    async importBackup(backupData, passphrase) {
         return this.request('/api/v1/identity/backup/import', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ backup_data: backupData, password }),
+            body: JSON.stringify({ backup_data: backupData, passphrase }),
         });
     }
     async verifyBackup(backupData) {
@@ -162,6 +162,9 @@ export class ZhtpApiMethods extends ZhtpApiCore {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ backup_data: backupData }),
         });
+    }
+    async getBackupStatus(identityId) {
+        return this.request(`/api/v1/identity/backup/status?identity_id=${encodeURIComponent(identityId)}`);
     }
     // ==================== Seed Phrase Operations ====================
     async verifySeedPhrase(identityId, seedPhrase) {

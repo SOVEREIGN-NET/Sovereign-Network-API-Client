@@ -277,13 +277,8 @@ export interface CitizenshipResult {
 // ==================== Backup & Recovery Types ====================
 
 export interface BackupData {
-  version: string;
-  encrypted_data: string;
-  metadata: {
-    created_at: number;
-    identity_id: string;
-    backup_type: string;
-  };
+  backup_data: string;
+  created_at: number;
 }
 
 export interface BackupVerification {
@@ -295,10 +290,17 @@ export interface BackupVerification {
   warnings: string[];
 }
 
+export interface ImportBackupResponse {
+  status: string;
+  identity: {
+    identity_id: string;
+    did: string;
+  };
+  session_token: string;
+}
+
 export interface SeedVerification {
-  valid: boolean;
-  wallet_id?: string;
-  wallet_type?: string;
+  verified: boolean;
 }
 
 export interface SeedPhrases {
@@ -306,6 +308,12 @@ export interface SeedPhrases {
   ubi?: string[];
   savings?: string[];
   master?: string[];
+}
+
+export interface BackupStatus {
+  has_recovery_phrase: boolean;
+  backup_date: number | null;
+  verified: boolean;
 }
 
 // ==================== Guardian Types ====================

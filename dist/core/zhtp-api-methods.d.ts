@@ -3,7 +3,7 @@
  * All API method implementations for various operations
  */
 import { ZhtpApiCore } from './zhtp-api-core';
-import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, GasInfo, Proof, SignupRequest, LoginRequest, BackupData, BackupVerification, SeedVerification, SeedPhrases, Guardian, GuardianResponse, RecoverySession, RecoveryStatus, CitizenshipResult } from './types';
+import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, GasInfo, Proof, SignupRequest, LoginRequest, BackupData, BackupVerification, BackupStatus, ImportBackupResponse, SeedVerification, SeedPhrases, Guardian, GuardianResponse, RecoverySession, RecoveryStatus, CitizenshipResult } from './types';
 export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
     signIn(did: string, passphrase: string): Promise<Identity>;
     createIdentity(data: any): Promise<Identity>;
@@ -27,9 +27,10 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
     recoverIdentityFromSeed(recoveryData: Record<string, any>): Promise<Identity>;
     restoreIdentityFromBackup(backupData: Record<string, any>): Promise<Identity>;
     recoverIdentityWithGuardians(guardianData: Record<string, any>): Promise<Identity>;
-    exportBackup(identityId: string, password: string): Promise<BackupData>;
-    importBackup(backupData: string, password: string): Promise<Identity>;
+    exportBackup(identityId: string, passphrase: string): Promise<BackupData>;
+    importBackup(backupData: string, passphrase: string): Promise<ImportBackupResponse>;
     verifyBackup(backupData: string): Promise<BackupVerification>;
+    getBackupStatus(identityId: string): Promise<BackupStatus>;
     verifySeedPhrase(identityId: string, seedPhrase: string): Promise<SeedVerification>;
     exportSeedPhrases(identityId: string): Promise<SeedPhrases>;
     addGuardian(identityId: string, guardianId: string, guardianInfo?: Record<string, any>): Promise<GuardianResponse>;

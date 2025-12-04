@@ -207,6 +207,113 @@ describe('ZhtpApi', () => {
     });
   });
 
+  describe('API Methods - Backup & Recovery', () => {
+    beforeEach(async () => {
+      api = new ZhtpApi(mockConfigProvider);
+      await api.ensureInitialized();
+      global.fetch = vi.fn();
+    });
+
+    it('exportBackup should POST to /api/v1/identity/backup/export with passphrase', async () => {
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          backup_data: 'encrypted_data_base64',
+          created_at: 1234567890,
+        }),
+      });
+
+      await api.exportBackup('test-id', 'test-passphrase');
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        'http://localhost:8000/api/v1/identity/backup/export',
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('passphrase'),
+        })
+      );
+    });
+
+    it('importBackup should POST to /api/v1/identity/backup/import with passphrase', async () => {
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          status: 'success',
+          identity: {
+            identity_id: 'test-id',
+            did: 'did:zhtp:test',
+          },
+          session_token: 'test-token',
+        }),
+      });
+
+      await api.importBackup('backup-data', 'test-passphrase');
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        'http://localhost:8000/api/v1/identity/backup/import',
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('passphrase'),
+        })
+      );
+    });
+
+    it('getBackupStatus should GET from /api/v1/identity/backup/status', async () => {
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          has_recovery_phrase: true,
+          backup_date: 1234567890,
+          verified: true,
+        }),
+      });
+
+      await api.getBackupStatus('test-id');
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/identity/backup/status?identity_id='),
+        expect.any(Object)
+      );
+    });
+
+    it('verifySeedPhrase should POST to /api/v1/identity/seed/verify', async () => {
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          verified: true,
+        }),
+      });
+
+      await api.verifySeedPhrase('test-id', 'word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12');
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        'http://localhost:8000/api/v1/identity/seed/verify',
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('seed_phrase'),
+        })
+      );
+    });
+
+    it('exportSeedPhrases should GET from /api/v1/identity/{id}/seeds', async () => {
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          primary: ['word1', 'word2'],
+          ubi: ['word3', 'word4'],
+          savings: ['word5', 'word6'],
+        }),
+      });
+
+      await api.exportSeedPhrases('test-id');
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        'http://localhost:8000/api/v1/identity/test-id/seeds',
+        expect.any(Object)
+      );
+    });
+  });
+
   describe('API Methods - Wallet', () => {
     beforeEach(async () => {
       api = new ZhtpApi(mockConfigProvider);

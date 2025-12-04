@@ -28,6 +28,8 @@ import {
   LoginResponse,
   BackupData,
   BackupVerification,
+  BackupStatus,
+  ImportBackupResponse,
   SeedVerification,
   SeedPhrases,
   Guardian,
@@ -194,19 +196,19 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
 
   // ==================== Backup Operations ====================
 
-  async exportBackup(identityId: string, password: string): Promise<BackupData> {
+  async exportBackup(identityId: string, passphrase: string): Promise<BackupData> {
     return this.request<BackupData>('/api/v1/identity/backup/export', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ identity_id: identityId, password }),
+      body: JSON.stringify({ identity_id: identityId, passphrase }),
     });
   }
 
-  async importBackup(backupData: string, password: string): Promise<Identity> {
-    return this.request<Identity>('/api/v1/identity/backup/import', {
+  async importBackup(backupData: string, passphrase: string): Promise<ImportBackupResponse> {
+    return this.request<ImportBackupResponse>('/api/v1/identity/backup/import', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ backup_data: backupData, password }),
+      body: JSON.stringify({ backup_data: backupData, passphrase }),
     });
   }
 
@@ -216,6 +218,12 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ backup_data: backupData }),
     });
+  }
+
+  async getBackupStatus(identityId: string): Promise<BackupStatus> {
+    return this.request<BackupStatus>(
+      `/api/v1/identity/backup/status?identity_id=${encodeURIComponent(identityId)}`
+    );
   }
 
   // ==================== Seed Phrase Operations ====================
