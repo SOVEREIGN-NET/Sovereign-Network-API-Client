@@ -30,13 +30,8 @@ describe('ZhtpApi - SID Methods', () => {
   describe('Backup Operations', () => {
     it('exportBackup should POST to /api/v1/identity/backup/export', async () => {
       const mockBackupData = {
-        version: '1.0',
-        encrypted_data: 'encrypted_backup_data',
-        metadata: {
-          created_at: 1234567890,
-          identity_id: 'test-identity',
-          backup_type: 'full',
-        },
+        backup_data: 'encrypted_backup_data_base64',
+        created_at: 1234567890,
       };
 
       (global.fetch as any).mockResolvedValue({
@@ -44,7 +39,7 @@ describe('ZhtpApi - SID Methods', () => {
         json: vi.fn().mockResolvedValue(mockBackupData),
       });
 
-      const result = await api.exportBackup('test-identity', 'password123');
+      const result = await api.exportBackup('test-identity', 'test-passphrase');
 
       expect(global.fetch).toHaveBeenCalledWith(
         'http://localhost:8000/api/v1/identity/backup/export',
@@ -53,32 +48,33 @@ describe('ZhtpApi - SID Methods', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             identity_id: 'test-identity',
-            password: 'password123',
+            passphrase: 'test-passphrase',
           }),
         })
       );
 
       expect(result).toEqual(mockBackupData);
-      expect(result.version).toBe('1.0');
-      expect(result.metadata.identity_id).toBe('test-identity');
+      expect(result.backup_data).toBe('encrypted_backup_data_base64');
+      expect(result.created_at).toBe(1234567890);
     });
 
     it('importBackup should POST to /api/v1/identity/backup/import', async () => {
-      const mockIdentity = {
-        did: 'did:test:restored',
-        displayName: 'Restored User',
-        identityType: 'citizen' as const,
-        createdAt: '2024-01-01T00:00:00Z',
-        citizenship: true,
+      const mockResponse = {
+        status: 'success',
+        identity: {
+          identity_id: 'test-id-123',
+          did: 'did:test:restored',
+        },
+        session_token: 'test-session-token',
       };
 
       (global.fetch as any).mockResolvedValue({
         ok: true,
-        json: vi.fn().mockResolvedValue(mockIdentity),
+        json: vi.fn().mockResolvedValue(mockResponse),
       });
 
       const backupData = 'encrypted_backup_data_string';
-      const result = await api.importBackup(backupData, 'password123');
+      const result = await api.importBackup(backupData, 'test-passphrase');
 
       expect(global.fetch).toHaveBeenCalledWith(
         'http://localhost:8000/api/v1/identity/backup/import',
@@ -86,13 +82,14 @@ describe('ZhtpApi - SID Methods', () => {
           method: 'POST',
           body: JSON.stringify({
             backup_data: backupData,
-            password: 'password123',
+            passphrase: 'test-passphrase',
           }),
         })
       );
 
-      expect(result.did).toBe('did:test:restored');
-      expect(result.identityType).toBe('citizen');
+      expect(result.status).toBe('success');
+      expect(result.identity.did).toBe('did:test:restored');
+      expect(result.session_token).toBe('test-session-token');
     });
 
     it('verifyBackup should POST to /api/v1/identity/backup/verify', async () => {

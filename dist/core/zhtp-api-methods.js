@@ -142,18 +142,51 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         });
     }
     // ==================== Backup Operations ====================
-    async exportBackup(identityId, password) {
+    /**
+     * Export encrypted identity backup
+     *
+     * SECURITY WARNINGS:
+     * 1. Use a strong passphrase (minimum 12 characters)
+     * 2. Store backup data securely offline
+     * 3. Never share or log the passphrase
+     * 4. This operation requires an active authenticated session
+     *
+     * @param identityId - Identity ID to backup
+     * @param passphrase - Encryption passphrase (minimum 12 characters)
+     * @returns Encrypted backup data (base64) with creation timestamp
+     * @throws Error if passphrase is too short or session is invalid
+     */
+    async exportBackup(identityId, passphrase) {
+        if (passphrase.length < 12) {
+            throw new Error('Passphrase must be at least 12 characters');
+        }
         return this.request('/api/v1/identity/backup/export', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ identity_id: identityId, password }),
+            body: JSON.stringify({ identity_id: identityId, passphrase }),
         });
     }
-    async importBackup(backupData, password) {
+    /**
+     * Import and restore identity from encrypted backup
+     *
+     * SECURITY WARNINGS:
+     * 1. This endpoint is rate-limited to 3 attempts per hour per IP
+     * 2. Incorrect passphrase will result in decryption failure
+     * 3. Creates a new session upon successful import
+     *
+     * @param backupData - Encrypted backup data (base64 string from exportBackup)
+     * @param passphrase - Decryption passphrase (same as used for export)
+     * @returns Restored identity info and new session token
+     * @throws Error if passphrase is incorrect or backup is corrupted
+     */
+    async importBackup(backupData, passphrase) {
+        if (passphrase.length < 12) {
+            throw new Error('Passphrase must be at least 12 characters');
+        }
         return this.request('/api/v1/identity/backup/import', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ backup_data: backupData, password }),
+            body: JSON.stringify({ backup_data: backupData, passphrase }),
         });
     }
     async verifyBackup(backupData) {
@@ -163,8 +196,35 @@ export class ZhtpApiMethods extends ZhtpApiCore {
             body: JSON.stringify({ backup_data: backupData }),
         });
     }
+    /**
+     * Get backup status for an identity
+     *
+     * @param identityId - Identity ID to check
+     * @returns Backup status including recovery phrase existence and verification state
+     */
+    async getBackupStatus(identityId) {
+        return this.request(`/api/v1/identity/backup/status?identity_id=${encodeURIComponent(identityId)}`);
+    }
     // ==================== Seed Phrase Operations ====================
+    /**
+     * Verify a BIP39 seed phrase for a wallet
+     *
+     * SECURITY WARNINGS:
+     * 1. Seed phrase must be exactly 12 words
+     * 2. Never log or store seed phrases
+     * 3. This endpoint is rate-limited to prevent brute force attacks
+     * 4. Requires active authenticated session
+     *
+     * @param identityId - Identity ID that owns the wallet
+     * @param seedPhrase - 12-word BIP39 seed phrase to verify
+     * @returns Verification result
+     * @throws Error if seed phrase format is invalid
+     */
     async verifySeedPhrase(identityId, seedPhrase) {
+        const words = seedPhrase.trim().split(/\s+/);
+        if (words.length !== 12) {
+            throw new Error('Seed phrase must be exactly 12 words');
+        }
         return this.request('/api/v1/identity/seed/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
