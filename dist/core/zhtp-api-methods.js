@@ -235,23 +235,32 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         return this.request(`/api/v1/identity/${identityId}/seeds`);
     }
     // ==================== Guardian Management ====================
-    async addGuardian(identityId, guardianDid, guardianName) {
+    async addGuardian(identityId, sessionToken, guardianDid, guardianPublicKey, guardianName) {
         return this.request('/api/v1/identity/guardians/add', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 identity_id: identityId,
+                session_token: sessionToken,
                 guardian_did: guardianDid,
+                guardian_public_key: guardianPublicKey,
                 guardian_name: guardianName
             }),
         });
     }
-    async listGuardians(identityId) {
-        return this.request(`/api/v1/identity/guardians?identity_id=${encodeURIComponent(identityId)}`);
+    async listGuardians(sessionToken) {
+        return this.request('/api/v1/identity/guardians', {
+            headers: {
+                'Authorization': `Bearer ${sessionToken}`
+            }
+        });
     }
-    async removeGuardian(identityId, guardianId) {
-        await this.request(`/api/v1/identity/guardians/${guardianId}?identity_id=${encodeURIComponent(identityId)}`, {
+    async removeGuardian(guardianId, sessionToken) {
+        await this.request(`/api/v1/identity/guardians/${guardianId}`, {
             method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${sessionToken}`
+            }
         });
     }
     // ==================== Guardian Recovery Flow ====================
@@ -262,18 +271,26 @@ export class ZhtpApiMethods extends ZhtpApiCore {
             body: JSON.stringify({ identity_did: identityDid, requester_device: requesterDevice }),
         });
     }
-    async approveRecovery(recoveryId, guardianDid, signature) {
-        await this.request(`/api/v1/identity/recovery/${recoveryId}/approve`, {
+    async approveRecovery(recoveryId, guardianDid, sessionToken, signature) {
+        return this.request(`/api/v1/identity/recovery/${recoveryId}/approve`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ guardian_did: guardianDid, signature }),
+            body: JSON.stringify({
+                guardian_did: guardianDid,
+                session_token: sessionToken,
+                signature: signature
+            }),
         });
     }
-    async rejectRecovery(recoveryId, guardianDid) {
+    async rejectRecovery(recoveryId, guardianDid, sessionToken, signature) {
         await this.request(`/api/v1/identity/recovery/${recoveryId}/reject`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ guardian_did: guardianDid }),
+            body: JSON.stringify({
+                guardian_did: guardianDid,
+                session_token: sessionToken,
+                signature: signature
+            }),
         });
     }
     async completeRecovery(recoveryId) {
@@ -285,8 +302,12 @@ export class ZhtpApiMethods extends ZhtpApiCore {
     async getRecoveryStatus(recoveryId) {
         return this.request(`/api/v1/identity/recovery/${recoveryId}/status`);
     }
-    async getPendingRecoveries() {
-        return this.request('/api/v1/identity/recovery/pending');
+    async getPendingRecoveries(sessionToken) {
+        return this.request('/api/v1/identity/recovery/pending', {
+            headers: {
+                'Authorization': `Bearer ${sessionToken}`
+            }
+        });
     }
     // ==================== Citizenship ====================
     async applyCitizenship(identityId, applicationData) {

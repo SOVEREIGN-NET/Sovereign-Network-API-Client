@@ -302,25 +302,40 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
 
   // ==================== Guardian Management ====================
 
-  async addGuardian(identityId: string, guardianDid: string, guardianName: string): Promise<GuardianResponse> {
+  async addGuardian(
+    identityId: string,
+    sessionToken: string,
+    guardianDid: string,
+    guardianPublicKey: number[],
+    guardianName: string
+  ): Promise<GuardianResponse> {
     return this.request<GuardianResponse>('/api/v1/identity/guardians/add', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         identity_id: identityId,
+        session_token: sessionToken,
         guardian_did: guardianDid,
+        guardian_public_key: guardianPublicKey,
         guardian_name: guardianName
       }),
     });
   }
 
-  async listGuardians(identityId: string): Promise<Guardian[]> {
-    return this.request<Guardian[]>(`/api/v1/identity/guardians?identity_id=${encodeURIComponent(identityId)}`);
+  async listGuardians(sessionToken: string): Promise<{ guardians: Guardian[]; threshold: number }> {
+    return this.request<{ guardians: Guardian[]; threshold: number }>('/api/v1/identity/guardians', {
+      headers: {
+        'Authorization': `Bearer ${sessionToken}`
+      }
+    });
   }
 
-  async removeGuardian(identityId: string, guardianId: string): Promise<void> {
-    await this.request<void>(`/api/v1/identity/guardians/${guardianId}?identity_id=${encodeURIComponent(identityId)}`, {
+  async removeGuardian(guardianId: string, sessionToken: string): Promise<void> {
+    await this.request<void>(`/api/v1/identity/guardians/${guardianId}`, {
       method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${sessionToken}`
+      }
     });
   }
 
@@ -334,19 +349,40 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
     });
   }
 
-  async approveRecovery(recoveryId: string, guardianDid: string, signature: string): Promise<void> {
-    await this.request<void>(`/api/v1/identity/recovery/${recoveryId}/approve`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ guardian_did: guardianDid, signature }),
-    });
+  async approveRecovery(
+    recoveryId: string,
+    guardianDid: string,
+    sessionToken: string,
+    signature: number[]
+  ): Promise<{ status: string; approvals: number; required: number }> {
+    return this.request<{ status: string; approvals: number; required: number }>(
+      `/api/v1/identity/recovery/${recoveryId}/approve`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          guardian_did: guardianDid,
+          session_token: sessionToken,
+          signature: signature
+        }),
+      }
+    );
   }
 
-  async rejectRecovery(recoveryId: string, guardianDid: string): Promise<void> {
+  async rejectRecovery(
+    recoveryId: string,
+    guardianDid: string,
+    sessionToken: string,
+    signature: number[]
+  ): Promise<void> {
     await this.request<void>(`/api/v1/identity/recovery/${recoveryId}/reject`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ guardian_did: guardianDid }),
+      body: JSON.stringify({
+        guardian_did: guardianDid,
+        session_token: sessionToken,
+        signature: signature
+      }),
     });
   }
 
@@ -364,9 +400,14 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
     return this.request<RecoveryStatus>(`/api/v1/identity/recovery/${recoveryId}/status`);
   }
 
-  async getPendingRecoveries(): Promise<{ pending_requests: Array<{ recovery_id: string; identity_did: string; initiated_at: number; expires_at: number }> }> {
+  async getPendingRecoveries(sessionToken: string): Promise<{ pending_requests: Array<{ recovery_id: string; identity_did: string; initiated_at: number; expires_at: number }> }> {
     return this.request<{ pending_requests: Array<{ recovery_id: string; identity_did: string; initiated_at: number; expires_at: number }> }>(
-      '/api/v1/identity/recovery/pending'
+      '/api/v1/identity/recovery/pending',
+      {
+        headers: {
+          'Authorization': `Bearer ${sessionToken}`
+        }
+      }
     );
   }
 

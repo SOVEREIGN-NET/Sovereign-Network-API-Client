@@ -80,19 +80,26 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
      */
     verifySeedPhrase(identityId: string, seedPhrase: string): Promise<SeedVerification>;
     exportSeedPhrases(identityId: string): Promise<SeedPhrases>;
-    addGuardian(identityId: string, guardianDid: string, guardianName: string): Promise<GuardianResponse>;
-    listGuardians(identityId: string): Promise<Guardian[]>;
-    removeGuardian(identityId: string, guardianId: string): Promise<void>;
+    addGuardian(identityId: string, sessionToken: string, guardianDid: string, guardianPublicKey: number[], guardianName: string): Promise<GuardianResponse>;
+    listGuardians(sessionToken: string): Promise<{
+        guardians: Guardian[];
+        threshold: number;
+    }>;
+    removeGuardian(guardianId: string, sessionToken: string): Promise<void>;
     initiateRecovery(identityDid: string, requesterDevice: string): Promise<RecoverySession>;
-    approveRecovery(recoveryId: string, guardianDid: string, signature: string): Promise<void>;
-    rejectRecovery(recoveryId: string, guardianDid: string): Promise<void>;
+    approveRecovery(recoveryId: string, guardianDid: string, sessionToken: string, signature: number[]): Promise<{
+        status: string;
+        approvals: number;
+        required: number;
+    }>;
+    rejectRecovery(recoveryId: string, guardianDid: string, sessionToken: string, signature: number[]): Promise<void>;
     completeRecovery(recoveryId: string): Promise<{
         status: string;
         session_token: string;
         identity_did: string;
     }>;
     getRecoveryStatus(recoveryId: string): Promise<RecoveryStatus>;
-    getPendingRecoveries(): Promise<{
+    getPendingRecoveries(sessionToken: string): Promise<{
         pending_requests: Array<{
             recovery_id: string;
             identity_did: string;
