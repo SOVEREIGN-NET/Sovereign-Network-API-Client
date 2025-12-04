@@ -3,7 +3,7 @@
  * All API method implementations for various operations
  */
 import { ZhtpApiCore } from './zhtp-api-core';
-import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, GasInfo, Proof, SignupRequest, LoginRequest, BackupData, BackupVerification, BackupStatus, ImportBackupResponse, SeedVerification, SeedPhrases, Guardian, GuardianResponse, RecoverySession, RecoveryStatus, CitizenshipResult } from './types';
+import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, GasInfo, SignupRequest, LoginRequest, BackupData, BackupVerification, BackupStatus, ImportBackupResponse, SeedVerification, SeedPhrases, Guardian, GuardianResponse, RecoverySession, RecoveryStatus, CitizenshipResult, ProofData, GenerateProofRequest, VerifyProofResponse } from './types';
 export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
     signIn(did: string, passphrase: string): Promise<Identity>;
     createIdentity(data: any): Promise<Identity>;
@@ -178,8 +178,43 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
     queryContract(contractId: string, functionName?: string, args?: any[]): Promise<Record<string, any>>;
     getContractMetadata(contractId: string): Promise<SmartContract>;
     upgradeContract(contractId: string, newBytecode: string, metadata?: Record<string, any>): Promise<ContractDeploymentResult>;
-    generateZkProof(data: Record<string, any>): Promise<Proof>;
-    verifyZkProof(proof: Proof): Promise<boolean>;
+    /**
+     * Generate a zero-knowledge proof for privacy-preserving credential verification
+     *
+     * Supported proof types:
+     * - age_over_18: Prove age >= 18 without revealing exact age
+     * - age_range: Prove age in range (18-25, 26-40, 41-65, 66+) without revealing exact age
+     * - citizenship_verified: Prove verified citizen status without revealing identity
+     * - jurisdiction_membership: Prove membership in jurisdiction without revealing personal data
+     *
+     * @param request - Proof generation request with identity_id, proof_type, and credential_data
+     * @param sessionToken - Session token for authentication
+     * @returns Generated proof data with 24-hour expiration
+     *
+     * @example
+     * const proof = await client.generateZkProof({
+     *   identity_id: myIdentity.id,
+     *   proof_type: "age_over_18",
+     *   credential_data: { age: 25 }
+     * }, sessionToken);
+     */
+    generateZkProof(request: GenerateProofRequest, sessionToken: string): Promise<ProofData>;
+    /**
+     * Verify a zero-knowledge proof
+     *
+     * Validates that a proof is cryptographically sound and has not expired.
+     * Does NOT reveal the underlying credential values.
+     *
+     * @param proof - Proof data to verify
+     * @returns Verification result with validity status and claim type
+     *
+     * @example
+     * const verification = await client.verifyZkProof(proof);
+     * if (verification.valid) {
+     *   console.log(`Verified claim: ${verification.claim}`);
+     * }
+     */
+    verifyZkProof(proof: ProofData): Promise<VerifyProofResponse>;
     testConnection(): Promise<boolean>;
     getProtocolInfo(): Promise<{
         success: boolean;

@@ -348,3 +348,44 @@ export interface RecoveryStatus {
   expires_at: number;
   identity_did: string;
 }
+
+// ==================== Zero-Knowledge Proof Types ====================
+
+export type ProofType = 'age_over_18' | 'age_range' | 'citizenship_verified' | 'jurisdiction_membership';
+
+export interface CredentialData {
+  age?: number;
+  jurisdiction?: string;
+  is_verified_citizen?: boolean;
+}
+
+export interface GenerateProofRequest {
+  identity_id: string;
+  proof_type: ProofType;
+  credential_data: CredentialData;
+}
+
+export interface ProofData {
+  proof_data: string; // Base64-encoded ZK proof
+  public_inputs: string[]; // Opaque commitments (no plaintext)
+  proof_type: ProofType;
+  generated_at: number;
+  valid_until: number; // Expires after 24 hours
+}
+
+export interface GenerateProofResponse {
+  status: string;
+  proof: ProofData;
+  valid_until: number;
+}
+
+export interface VerifyProofRequest {
+  proof: ProofData;
+}
+
+export interface VerifyProofResponse {
+  status: string;
+  valid: boolean;
+  claim: ProofType;
+  verified_at: number;
+}
