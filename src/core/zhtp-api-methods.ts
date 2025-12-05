@@ -58,6 +58,10 @@ import {
   VersionResponse,
   CapabilitiesResponse,
   ProtocolStatsResponse,
+  Web4RegisterRequest,
+  Web4RegisterResponse,
+  Web4ResolveResponse,
+  Web4DomainLookupResponse,
 } from './types';
 
 export abstract class ZhtpApiMethods extends ZhtpApiCore {
@@ -893,6 +897,37 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
 
   async resolveDomain(domainName: string): Promise<DApp> {
     return this.request<DApp>(`/api/v1/web4/resolve/${encodeURIComponent(domainName)}`);
+  }
+
+  /**
+   * Register a new Web4 domain with content
+   * @param request - Domain registration request with owner, content, signature, fee
+   * @returns Registration response with domain details and transaction hash
+   */
+  async registerWeb4Domain(request: Web4RegisterRequest): Promise<Web4RegisterResponse> {
+    return this.request<Web4RegisterResponse>('/api/v1/web4/domains/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+  }
+
+  /**
+   * Resolve Web4 domain to owner and registration details
+   * @param domain - Domain name (e.g., "example.zhtp")
+   * @returns Domain resolution with owner DID and registration timestamps
+   */
+  async resolveWeb4Domain(domain: string): Promise<Web4ResolveResponse> {
+    return this.request<Web4ResolveResponse>(`/api/v1/web4/resolve/${encodeURIComponent(domain)}`);
+  }
+
+  /**
+   * Get full Web4 domain information including content mappings
+   * @param domain - Domain name (e.g., "example.zhtp")
+   * @returns Complete domain record with content hashes
+   */
+  async getWeb4Domain(domain: string): Promise<Web4DomainLookupResponse> {
+    return this.request<Web4DomainLookupResponse>(`/api/v1/web4/domains/${encodeURIComponent(domain)}`);
   }
 
   /**

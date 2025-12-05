@@ -522,4 +522,48 @@ export interface ProtocolStatsResponse {
     average_response_time: number;
     error_rate: number;
 }
+export interface ContentMapping {
+    content: string;
+    content_type: string;
+}
+export interface Web4RegisterRequest {
+    domain: string;
+    owner: string;
+    content_mappings: Record<string, ContentMapping>;
+    metadata?: Record<string, any>;
+    signature: string;
+    timestamp: number;
+    fee?: number;
+}
+export interface Web4RegisterResponse {
+    success: boolean;
+    domain: string;
+    owner: string;
+    content_mappings: Record<string, string>;
+    fees_charged: number;
+    registered_at: number;
+    message: string;
+    blockchain_transaction?: string;
+    contract_deployed?: boolean;
+}
+export interface Web4ResolveResponse {
+    status: string;
+    domain: string;
+    owner: string;
+    registered_at: number;
+    expires_at: number;
+    note?: string;
+}
+export interface Web4DomainRecord {
+    domain: string;
+    owner: string;
+    registered_at: number;
+    expires_at: number;
+    content_mappings: Record<string, string>;
+}
+export interface Web4DomainLookupResponse {
+    found: boolean;
+    record?: Web4DomainRecord;
+    content_mappings: Record<string, string>;
+}
 //# sourceMappingURL=types.d.ts.map

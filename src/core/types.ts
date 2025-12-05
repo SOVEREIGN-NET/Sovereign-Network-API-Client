@@ -600,3 +600,55 @@ export interface ProtocolStatsResponse {
   average_response_time: number;
   error_rate: number;
 }
+
+// ==================== Web4 Domain Types ====================
+
+export interface ContentMapping {
+  content: string; // Base64-encoded content
+  content_type: string;
+}
+
+export interface Web4RegisterRequest {
+  domain: string;
+  owner: string; // DID format (did:zhtp:hex) or raw hex identity hash
+  content_mappings: Record<string, ContentMapping>;
+  metadata?: Record<string, any>;
+  signature: string; // Hex-encoded signature
+  timestamp: number; // Unix seconds
+  fee?: number; // ZHTP tokens
+}
+
+export interface Web4RegisterResponse {
+  success: boolean;
+  domain: string;
+  owner: string;
+  content_mappings: Record<string, string>; // path -> content hash
+  fees_charged: number;
+  registered_at: number;
+  message: string;
+  blockchain_transaction?: string;
+  contract_deployed?: boolean;
+}
+
+export interface Web4ResolveResponse {
+  status: string;
+  domain: string;
+  owner: string;
+  registered_at: number;
+  expires_at: number;
+  note?: string;
+}
+
+export interface Web4DomainRecord {
+  domain: string;
+  owner: string;
+  registered_at: number;
+  expires_at: number;
+  content_mappings: Record<string, string>;
+}
+
+export interface Web4DomainLookupResponse {
+  found: boolean;
+  record?: Web4DomainRecord;
+  content_mappings: Record<string, string>;
+}
