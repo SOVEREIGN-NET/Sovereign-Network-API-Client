@@ -36,11 +36,13 @@ export class ReactNativeConfigProvider implements ConfigProvider {
     }
 
     // Always prioritize envVars over cached config
+    // NOTE: ZHTP backend uses QUIC (UDP port 9334)
+    // React Native should use custom QUIC fetch adapter or HTTP/3 gateway
     const config: ApiConfig = {
       zhtpNodeUrl:
         this.envVars.ZHTP_NODE_URL ||
         (typeof process !== 'undefined' && process.env?.ZHTP_NODE_URL) ||
-        'http://localhost:8000',
+        'http://localhost:8000', // Default to HTTP gateway (for QUIC backend on :9334)
       networkType:
         (this.envVars.NETWORK_TYPE as 'testnet' | 'mainnet') ||
         (typeof process !== 'undefined' && process.env?.NETWORK_TYPE) ||
