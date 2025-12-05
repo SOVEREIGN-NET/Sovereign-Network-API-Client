@@ -469,4 +469,57 @@ export interface GasInfoResponse {
     base_fee: number;
     priority_fee: number;
 }
+export interface ProtocolInfoResponse {
+    status: string;
+    protocol: string;
+    version: string;
+    node_id: string;
+    uptime: number;
+    supported_methods: string[];
+    supported_features: string[];
+}
+export interface HealthCheck {
+    name: string;
+    status: string;
+    message: string;
+}
+export interface HealthCheckResponse {
+    status: string;
+    healthy: boolean;
+    uptime: number;
+    timestamp: number;
+    checks: HealthCheck[];
+}
+export interface BuildInfo {
+    commit: string;
+    build_date: string;
+    rust_version: string;
+}
+export interface VersionResponse {
+    status: string;
+    server_version: string;
+    protocol_version: string;
+    api_version: string;
+    build_info: BuildInfo;
+}
+export interface Capability {
+    name: string;
+    version: string;
+    description: string;
+    enabled: boolean;
+}
+export interface CapabilitiesResponse {
+    status: string;
+    capabilities: Capability[];
+    extensions: string[];
+}
+export interface ProtocolStatsResponse {
+    status: string;
+    requests_handled: number;
+    active_connections: number;
+    total_bytes_sent: number;
+    total_bytes_received: number;
+    average_response_time: number;
+    error_rate: number;
+}
 //# sourceMappingURL=types.d.ts.map

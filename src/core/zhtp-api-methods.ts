@@ -53,6 +53,11 @@ import {
   GasInfoResponse,
   AddPeerRequest,
   AddPeerResponse,
+  ProtocolInfoResponse,
+  HealthCheckResponse,
+  VersionResponse,
+  CapabilitiesResponse,
+  ProtocolStatsResponse,
 } from './types';
 
 export abstract class ZhtpApiMethods extends ZhtpApiCore {
@@ -1049,49 +1054,43 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
 
   // ==================== Protocol Information ====================
 
-  async getProtocolInfo() {
-    try {
-      const response = await this.request<any>('/api/v1/protocol/info');
+  /**
+   * Get protocol information including version, node ID, and supported features
+   * @returns Protocol information with capabilities and uptime
+   */
+  async getProtocolInfo(): Promise<ProtocolInfoResponse> {
+    return this.request<ProtocolInfoResponse>('/api/v1/protocol/info');
+  }
 
-      return {
-        success: true,
-        protocol: 'ZHTP/1.0',
-        version: response.version,
-        features: {
-          quantum_resistant: response.quantum_resistant,
-          zk_privacy_enabled: response.zk_privacy_enabled,
-          mesh_networking: response.mesh_networking,
-          dao_fees_enabled: response.dao_fees_enabled,
-          pure_tcp: true
-        },
-        network: {
-          id: response.network_id,
-          consensus: response.consensus_state,
-          block_height: response.block_height,
-          peer_count: response.peer_count,
-          healthy: response.healthy
-        },
-        node: {
-          status: response.status,
-          uptime: response.uptime_seconds,
-          latency: response.latency_ms,
-          synced: response.fully_synced
-        }
-      };
-    } catch (error) {
-      console.error('❌ Failed to get protocol info:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        protocol: 'ZHTP/1.0',
-        features: {
-          quantum_resistant: true,
-          zk_privacy_enabled: true,
-          mesh_networking: true,
-          dao_fees_enabled: true,
-          pure_tcp: true
-        }
-      };
-    }
+  /**
+   * Get health check status for the node
+   * @returns Health status with checks for server, handlers, and memory
+   */
+  async getProtocolHealth(): Promise<HealthCheckResponse> {
+    return this.request<HealthCheckResponse>('/api/v1/protocol/health');
+  }
+
+  /**
+   * Get version information for server, protocol, and API
+   * @returns Version details including build information
+   */
+  async getProtocolVersion(): Promise<VersionResponse> {
+    return this.request<VersionResponse>('/api/v1/protocol/version');
+  }
+
+  /**
+   * Get list of protocol capabilities and extensions
+   * @returns Available capabilities with enabled status and descriptions
+   */
+  async getProtocolCapabilities(): Promise<CapabilitiesResponse> {
+    return this.request<CapabilitiesResponse>('/api/v1/protocol/capabilities');
+  }
+
+  /**
+   * Get protocol statistics including request counts and bandwidth
+   * @returns Protocol metrics with request handling and performance stats
+   */
+  async getProtocolStats(): Promise<ProtocolStatsResponse> {
+    return this.request<ProtocolStatsResponse>('/api/v1/protocol/stats');
   }
 }
