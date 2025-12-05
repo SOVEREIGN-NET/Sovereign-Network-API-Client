@@ -5,6 +5,7 @@
 
 export { BrowserConfigProvider } from './config-provider';
 export { ZhtpApi } from '../core/zhtp-api';
+export type { FetchAdapter } from '../core/zhtp-api-core';
 export type {
   Identity,
   Wallet,

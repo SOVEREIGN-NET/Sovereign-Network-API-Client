@@ -7,13 +7,18 @@
 import { ConfigProvider } from './config-provider';
 import { ApiConfig } from './types';
 import { ZhtpApiMethods } from './zhtp-api-methods';
+import { FetchAdapter } from './zhtp-api-core';
 
 export class ZhtpApi extends ZhtpApiMethods {
   private configProvider: ConfigProvider;
   private initPromise: Promise<void>;
 
-  constructor(configProvider: ConfigProvider) {
-    super();
+  /**
+   * @param configProvider - Configuration provider for API settings
+   * @param fetchAdapter - Optional custom fetch implementation (e.g., QUIC-based for React Native)
+   */
+  constructor(configProvider: ConfigProvider, fetchAdapter?: FetchAdapter) {
+    super(fetchAdapter);
     this.configProvider = configProvider;
     this.initPromise = this.initialize();
   }
