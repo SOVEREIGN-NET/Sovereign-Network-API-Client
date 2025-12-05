@@ -48,6 +48,16 @@ import {
   CrossWalletTransferRequest,
   StakingRequest,
   TransactionHistoryResponse,
+  NetworkPeersResponse,
+  NetworkStatsResponse,
+  GasInfoResponse,
+  AddPeerRequest,
+  AddPeerResponse,
+  ProtocolInfoResponse,
+  HealthCheckResponse,
+  VersionResponse,
+  CapabilitiesResponse,
+  ProtocolStatsResponse,
 } from './types';
 
 export abstract class ZhtpApiMethods extends ZhtpApiCore {
@@ -489,8 +499,68 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
 
   // ==================== Network Operations ====================
 
+  /**
+   * Get list of connected network peers
+   * @returns Peer information including peer IDs, types, and connection status
+   */
+  async getNetworkPeers(): Promise<NetworkPeersResponse> {
+    return this.request<NetworkPeersResponse>('/api/v1/blockchain/network/peers');
+  }
+
+  /**
+   * Get comprehensive network statistics including mesh status and traffic
+   * @returns Network stats with mesh status, traffic, and peer distribution
+   */
+  async getNetworkStats(): Promise<NetworkStatsResponse> {
+    return this.request<NetworkStatsResponse>('/api/v1/blockchain/network/stats');
+  }
+
+  /**
+   * Get current gas pricing information for transaction cost estimation
+   * @returns Gas prices including base fee, priority fee, and estimated costs
+   */
+  async getGasInfo(): Promise<GasInfoResponse> {
+    return this.request<GasInfoResponse>('/api/v1/network/gas');
+  }
+
+  /**
+   * Add a peer to the network by address
+   * @param request - Peer address and optional peer type
+   * @returns Connection result with peer ID and status
+   */
+  async addNetworkPeer(request: AddPeerRequest): Promise<AddPeerResponse> {
+    return this.request<AddPeerResponse>('/api/v1/blockchain/network/peer/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+  }
+
+  /**
+   * Remove a peer from the network
+   * @param peerId - ID of the peer to remove
+   * @returns Removal result with status
+   */
+  async removeNetworkPeer(peerId: string): Promise<any> {
+    return this.request<any>(`/api/v1/blockchain/network/peer/${peerId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Legacy method (kept for backward compatibility)
+
+  /**
+   * @deprecated Use getNetworkPeers() instead
+   */
   async getNetworkInfo(): Promise<NetworkStatus> {
-    return this.request<NetworkStatus>('/api/v1/blockchain/network/peers');
+    const response = await this.getNetworkPeers();
+    return {
+      peers: response.peer_count,
+      meshConnected: response.peers.length > 0,
+      latency: 0,
+      version: '1.0',
+      quantumResistant: true,
+    };
   }
 
   // ==================== Wallet & Transaction Operations ====================
@@ -847,41 +917,19 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
     return this.request<any>('/api/v1/blockchain/status');
   }
 
-  async getGasInfo(): Promise<GasInfo> {
-    return this.request<GasInfo>('/api/v1/network/gas');
-  }
-
   async getNodeStatus(): Promise<NodeStatus> {
     return this.request<NodeStatus>('/api/v1/protocol/info');
   }
 
+  /**
+   * @deprecated Use getNetworkPeers() instead
+   */
   async getMeshPeers(): Promise<{ peers: string[]; count: number }> {
-    return this.request<{ peers: string[]; count: number }>('/api/v1/blockchain/network/peers');
-  }
-
-  async getNetworkStats(): Promise<{
-    blockchain: Record<string, any>;
-    gas: Record<string, any>;
-    mesh: Record<string, any>;
-    timestamp: string;
-  }> {
-    try {
-      const [blockchainInfo, gasInfo, meshInfo] = await Promise.all([
-        this.getBlockchainInfo().catch(() => ({})),
-        this.getGasInfo().catch(() => ({})),
-        this.getMeshPeers().catch(() => ({ peers: [], count: 0 })),
-      ]);
-
-      return {
-        blockchain: blockchainInfo,
-        gas: gasInfo,
-        mesh: meshInfo,
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      console.warn('⚠️ Failed to get network stats:', error);
-      throw error;
-    }
+    const response = await this.getNetworkPeers();
+    return {
+      peers: response.peers.map(p => p.peer_id),
+      count: response.peer_count,
+    };
   }
 
   // ==================== Smart Contract Operations ====================
@@ -1006,49 +1054,43 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
 
   // ==================== Protocol Information ====================
 
-  async getProtocolInfo() {
-    try {
-      const response = await this.request<any>('/api/v1/protocol/info');
+  /**
+   * Get protocol information including version, node ID, and supported features
+   * @returns Protocol information with capabilities and uptime
+   */
+  async getProtocolInfo(): Promise<ProtocolInfoResponse> {
+    return this.request<ProtocolInfoResponse>('/api/v1/protocol/info');
+  }
 
-      return {
-        success: true,
-        protocol: 'ZHTP/1.0',
-        version: response.version,
-        features: {
-          quantum_resistant: response.quantum_resistant,
-          zk_privacy_enabled: response.zk_privacy_enabled,
-          mesh_networking: response.mesh_networking,
-          dao_fees_enabled: response.dao_fees_enabled,
-          pure_tcp: true
-        },
-        network: {
-          id: response.network_id,
-          consensus: response.consensus_state,
-          block_height: response.block_height,
-          peer_count: response.peer_count,
-          healthy: response.healthy
-        },
-        node: {
-          status: response.status,
-          uptime: response.uptime_seconds,
-          latency: response.latency_ms,
-          synced: response.fully_synced
-        }
-      };
-    } catch (error) {
-      console.error('❌ Failed to get protocol info:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        protocol: 'ZHTP/1.0',
-        features: {
-          quantum_resistant: true,
-          zk_privacy_enabled: true,
-          mesh_networking: true,
-          dao_fees_enabled: true,
-          pure_tcp: true
-        }
-      };
-    }
+  /**
+   * Get health check status for the node
+   * @returns Health status with checks for server, handlers, and memory
+   */
+  async getProtocolHealth(): Promise<HealthCheckResponse> {
+    return this.request<HealthCheckResponse>('/api/v1/protocol/health');
+  }
+
+  /**
+   * Get version information for server, protocol, and API
+   * @returns Version details including build information
+   */
+  async getProtocolVersion(): Promise<VersionResponse> {
+    return this.request<VersionResponse>('/api/v1/protocol/version');
+  }
+
+  /**
+   * Get list of protocol capabilities and extensions
+   * @returns Available capabilities with enabled status and descriptions
+   */
+  async getProtocolCapabilities(): Promise<CapabilitiesResponse> {
+    return this.request<CapabilitiesResponse>('/api/v1/protocol/capabilities');
+  }
+
+  /**
+   * Get protocol statistics including request counts and bandwidth
+   * @returns Protocol metrics with request handling and performance stats
+   */
+  async getProtocolStats(): Promise<ProtocolStatsResponse> {
+    return this.request<ProtocolStatsResponse>('/api/v1/protocol/stats');
   }
 }

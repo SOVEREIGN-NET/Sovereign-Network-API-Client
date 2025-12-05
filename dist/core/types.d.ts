@@ -414,4 +414,112 @@ export interface TransactionHistoryResponse {
     total_transactions: number;
     transactions: TransactionRecord[];
 }
+export interface PeerInfo {
+    peer_id: string;
+    peer_type: string;
+    status: string;
+    connection_time: number | null;
+}
+export interface NetworkPeersResponse {
+    status: string;
+    peer_count: number;
+    peers: PeerInfo[];
+}
+export interface AddPeerRequest {
+    peer_address: string;
+    peer_type?: string;
+}
+export interface AddPeerResponse {
+    status: string;
+    peer_id: string;
+    message: string;
+    connected: boolean;
+}
+export interface MeshStatusInfo {
+    internet_connected: boolean;
+    mesh_connected: boolean;
+    connectivity_percentage: number;
+    coverage: number;
+    stability: number;
+}
+export interface TrafficStats {
+    bytes_sent: number;
+    bytes_received: number;
+    packets_sent: number;
+    packets_received: number;
+    connection_count: number;
+}
+export interface PeerDistribution {
+    active_peers: number;
+    local_peers: number;
+    regional_peers: number;
+    global_peers: number;
+    relay_peers: number;
+}
+export interface NetworkStatsResponse {
+    status: string;
+    mesh_status: MeshStatusInfo;
+    traffic_stats: TrafficStats;
+    peer_distribution: PeerDistribution;
+}
+export interface GasInfoResponse {
+    status: string;
+    gas_price: number;
+    estimated_cost: number;
+    base_fee: number;
+    priority_fee: number;
+}
+export interface ProtocolInfoResponse {
+    status: string;
+    protocol: string;
+    version: string;
+    node_id: string;
+    uptime: number;
+    supported_methods: string[];
+    supported_features: string[];
+}
+export interface HealthCheck {
+    name: string;
+    status: string;
+    message: string;
+}
+export interface HealthCheckResponse {
+    status: string;
+    healthy: boolean;
+    uptime: number;
+    timestamp: number;
+    checks: HealthCheck[];
+}
+export interface BuildInfo {
+    commit: string;
+    build_date: string;
+    rust_version: string;
+}
+export interface VersionResponse {
+    status: string;
+    server_version: string;
+    protocol_version: string;
+    api_version: string;
+    build_info: BuildInfo;
+}
+export interface Capability {
+    name: string;
+    version: string;
+    description: string;
+    enabled: boolean;
+}
+export interface CapabilitiesResponse {
+    status: string;
+    capabilities: Capability[];
+    extensions: string[];
+}
+export interface ProtocolStatsResponse {
+    status: string;
+    requests_handled: number;
+    active_connections: number;
+    total_bytes_sent: number;
+    total_bytes_received: number;
+    average_response_time: number;
+    error_rate: number;
+}
 //# sourceMappingURL=types.d.ts.map

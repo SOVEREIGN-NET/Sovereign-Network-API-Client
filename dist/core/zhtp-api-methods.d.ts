@@ -3,7 +3,7 @@
  * All API method implementations for various operations
  */
 import { ZhtpApiCore } from './zhtp-api-core';
-import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, GasInfo, SignupRequest, LoginRequest, BackupData, BackupVerification, BackupStatus, ImportBackupResponse, SeedVerification, SeedPhrases, Guardian, GuardianResponse, RecoverySession, RecoveryStatus, CitizenshipResult, ProofData, GenerateProofRequest, VerifyProofResponse, WalletListResponse, WalletBalanceResponse, SimpleSendRequest, CrossWalletTransferRequest, TransactionHistoryResponse } from './types';
+import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, SignupRequest, LoginRequest, BackupData, BackupVerification, BackupStatus, ImportBackupResponse, SeedVerification, SeedPhrases, Guardian, GuardianResponse, RecoverySession, RecoveryStatus, CitizenshipResult, ProofData, GenerateProofRequest, VerifyProofResponse, WalletListResponse, WalletBalanceResponse, SimpleSendRequest, CrossWalletTransferRequest, TransactionHistoryResponse, NetworkPeersResponse, NetworkStatsResponse, GasInfoResponse, AddPeerRequest, AddPeerResponse, ProtocolInfoResponse, HealthCheckResponse, VersionResponse, CapabilitiesResponse, ProtocolStatsResponse } from './types';
 export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
     signIn(did: string, passphrase: string): Promise<Identity>;
     createIdentity(data: any): Promise<Identity>;
@@ -116,6 +116,36 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
         token: string;
         identity: Identity;
     }>;
+    /**
+     * Get list of connected network peers
+     * @returns Peer information including peer IDs, types, and connection status
+     */
+    getNetworkPeers(): Promise<NetworkPeersResponse>;
+    /**
+     * Get comprehensive network statistics including mesh status and traffic
+     * @returns Network stats with mesh status, traffic, and peer distribution
+     */
+    getNetworkStats(): Promise<NetworkStatsResponse>;
+    /**
+     * Get current gas pricing information for transaction cost estimation
+     * @returns Gas prices including base fee, priority fee, and estimated costs
+     */
+    getGasInfo(): Promise<GasInfoResponse>;
+    /**
+     * Add a peer to the network by address
+     * @param request - Peer address and optional peer type
+     * @returns Connection result with peer ID and status
+     */
+    addNetworkPeer(request: AddPeerRequest): Promise<AddPeerResponse>;
+    /**
+     * Remove a peer from the network
+     * @param peerId - ID of the peer to remove
+     * @returns Removal result with status
+     */
+    removeNetworkPeer(peerId: string): Promise<any>;
+    /**
+     * @deprecated Use getNetworkPeers() instead
+     */
     getNetworkInfo(): Promise<NetworkStatus>;
     /**
      * List all wallets for an identity
@@ -223,17 +253,13 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
      */
     getContractFromDht(contractId: string): Promise<SmartContract>;
     getBlockchainInfo(): Promise<any>;
-    getGasInfo(): Promise<GasInfo>;
     getNodeStatus(): Promise<NodeStatus>;
+    /**
+     * @deprecated Use getNetworkPeers() instead
+     */
     getMeshPeers(): Promise<{
         peers: string[];
         count: number;
-    }>;
-    getNetworkStats(): Promise<{
-        blockchain: Record<string, any>;
-        gas: Record<string, any>;
-        mesh: Record<string, any>;
-        timestamp: string;
     }>;
     deployContract(contractData: SmartContract, options?: Record<string, any>): Promise<ContractDeploymentResult>;
     executeContract(contractId: string, functionName: string, args?: any[]): Promise<ContractExecutionResult>;
@@ -278,45 +304,30 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
      */
     verifyZkProof(proof: ProofData): Promise<VerifyProofResponse>;
     testConnection(): Promise<boolean>;
-    getProtocolInfo(): Promise<{
-        success: boolean;
-        protocol: string;
-        version: any;
-        features: {
-            quantum_resistant: any;
-            zk_privacy_enabled: any;
-            mesh_networking: any;
-            dao_fees_enabled: any;
-            pure_tcp: boolean;
-        };
-        network: {
-            id: any;
-            consensus: any;
-            block_height: any;
-            peer_count: any;
-            healthy: any;
-        };
-        node: {
-            status: any;
-            uptime: any;
-            latency: any;
-            synced: any;
-        };
-        error?: undefined;
-    } | {
-        success: boolean;
-        error: string;
-        protocol: string;
-        features: {
-            quantum_resistant: boolean;
-            zk_privacy_enabled: boolean;
-            mesh_networking: boolean;
-            dao_fees_enabled: boolean;
-            pure_tcp: boolean;
-        };
-        version?: undefined;
-        network?: undefined;
-        node?: undefined;
-    }>;
+    /**
+     * Get protocol information including version, node ID, and supported features
+     * @returns Protocol information with capabilities and uptime
+     */
+    getProtocolInfo(): Promise<ProtocolInfoResponse>;
+    /**
+     * Get health check status for the node
+     * @returns Health status with checks for server, handlers, and memory
+     */
+    getProtocolHealth(): Promise<HealthCheckResponse>;
+    /**
+     * Get version information for server, protocol, and API
+     * @returns Version details including build information
+     */
+    getProtocolVersion(): Promise<VersionResponse>;
+    /**
+     * Get list of protocol capabilities and extensions
+     * @returns Available capabilities with enabled status and descriptions
+     */
+    getProtocolCapabilities(): Promise<CapabilitiesResponse>;
+    /**
+     * Get protocol statistics including request counts and bandwidth
+     * @returns Protocol metrics with request handling and performance stats
+     */
+    getProtocolStats(): Promise<ProtocolStatsResponse>;
 }
 //# sourceMappingURL=zhtp-api-methods.d.ts.map
