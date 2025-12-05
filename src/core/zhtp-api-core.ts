@@ -5,12 +5,28 @@
 
 import { ApiConfig } from './types';
 
+/**
+ * Transport adapter for custom network implementations (e.g., QUIC)
+ * React Native apps can provide their own fetch implementation using native QUIC
+ */
+export type FetchAdapter = (url: string, options?: RequestInit) => Promise<Response>;
+
 export abstract class ZhtpApiCore {
   protected baseUrl: string = '';
   protected config: ApiConfig | null = null;
   protected maxRetries = 3;
   protected requestTimeout = 10000;
   protected retryDelays = [1000, 2000, 4000]; // Exponential backoff
+
+  /**
+   * Custom fetch adapter (e.g., QUIC-based fetch for React Native)
+   * Defaults to global fetch if not provided
+   */
+  protected fetchAdapter: FetchAdapter;
+
+  constructor(fetchAdapter?: FetchAdapter) {
+    this.fetchAdapter = fetchAdapter || ((url, options) => fetch(url, options));
+  }
 
   /**
    * Generic request method with retry logic and timeout
@@ -26,7 +42,7 @@ export abstract class ZhtpApiCore {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), this.requestTimeout);
 
-      const response = await fetch(url, {
+      const response = await this.fetchAdapter(url, {
         ...options,
         signal: controller.signal,
       });

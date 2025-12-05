@@ -5,8 +5,12 @@
  */
 import { ZhtpApiMethods } from './zhtp-api-methods.js';
 export class ZhtpApi extends ZhtpApiMethods {
-    constructor(configProvider) {
-        super();
+    /**
+     * @param configProvider - Configuration provider for API settings
+     * @param fetchAdapter - Optional custom fetch implementation (e.g., QUIC-based for React Native)
+     */
+    constructor(configProvider, fetchAdapter) {
+        super(fetchAdapter);
         this.configProvider = configProvider;
         this.initPromise = this.initialize();
     }
