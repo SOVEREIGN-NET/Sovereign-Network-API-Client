@@ -249,13 +249,8 @@ export interface CitizenshipResult {
     };
 }
 export interface BackupData {
-    version: string;
-    encrypted_data: string;
-    metadata: {
-        created_at: number;
-        identity_id: string;
-        backup_type: string;
-    };
+    backup_data: string;
+    created_at: number;
 }
 export interface BackupVerification {
     valid: boolean;
@@ -265,10 +260,16 @@ export interface BackupVerification {
     errors: string[];
     warnings: string[];
 }
+export interface ImportBackupResponse {
+    status: string;
+    identity: {
+        identity_id: string;
+        did: string;
+    };
+    session_token: string;
+}
 export interface SeedVerification {
-    valid: boolean;
-    wallet_id?: string;
-    wallet_type?: string;
+    verified: boolean;
 }
 export interface SeedPhrases {
     primary?: string[];
@@ -276,43 +277,293 @@ export interface SeedPhrases {
     savings?: string[];
     master?: string[];
 }
+export interface BackupStatus {
+    has_recovery_phrase: boolean;
+    backup_date: number | null;
+    verified: boolean;
+}
 export interface Guardian {
     guardian_id: string;
-    guardian_name?: string;
-    status: 'pending' | 'active' | 'revoked';
+    guardian_did: string;
+    name: string;
     added_at: number;
-    relationship?: string;
+    status: string;
 }
 export interface GuardianResponse {
     status: string;
     guardian_id: string;
-    message: string;
+    total_guardians: number;
 }
 export interface RecoverySession {
+    status: string;
     recovery_id: string;
-    identity_id: string;
-    status: 'initiated' | 'pending_approvals' | 'completed' | 'cancelled';
-    required_approvals: number;
-    current_approvals: number;
-    guardian_ids: string[];
-    created_at: number;
+    guardians_required: number;
+    guardians_approved: number;
     expires_at: number;
 }
 export interface RecoveryStatus {
     recovery_id: string;
-    status: 'initiated' | 'pending_approvals' | 'completed' | 'cancelled' | 'failed';
-    progress: {
-        required: number;
-        approved: number;
-        declined: number;
-    };
-    guardians: Array<{
-        guardian_id: string;
-        status: 'pending' | 'approved' | 'declined';
-        responded_at?: number;
-    }>;
-    created_at: number;
-    updated_at: number;
+    status: string;
+    approvals: number;
+    required: number;
     expires_at: number;
+    identity_did: string;
+}
+export type ProofType = 'age_over_18' | 'age_range' | 'citizenship_verified' | 'jurisdiction_membership';
+export interface CredentialData {
+    age?: number;
+    jurisdiction?: string;
+    is_verified_citizen?: boolean;
+}
+export interface GenerateProofRequest {
+    identity_id: string;
+    proof_type: ProofType;
+    credential_data: CredentialData;
+}
+export interface ProofData {
+    proof_data: string;
+    public_inputs: string[];
+    proof_type: ProofType;
+    generated_at: number;
+    valid_until: number;
+}
+export interface GenerateProofResponse {
+    status: string;
+    proof: ProofData;
+    valid_until: number;
+}
+export interface VerifyProofRequest {
+    proof: ProofData;
+}
+export interface VerifyProofResponse {
+    status: string;
+    valid: boolean;
+    claim: ProofType;
+    verified_at: number;
+}
+export interface WalletPermissions {
+    can_transfer_external: boolean;
+    can_vote: boolean;
+    can_stake: boolean;
+    can_receive_rewards: boolean;
+    daily_transaction_limit: number;
+    requires_multisig_threshold: number | null;
+}
+export interface DetailedWalletInfo {
+    wallet_type: string;
+    wallet_id: string;
+    available_balance: number;
+    staked_balance: number;
+    pending_rewards: number;
+    total_balance: number;
+    permissions: WalletPermissions;
+    created_at: number;
+    description: string;
+}
+export interface WalletListResponse {
+    status: string;
+    identity_id: string;
+    total_wallets: number;
+    total_balance: number;
+    wallets: DetailedWalletInfo[];
+}
+export interface WalletBalanceResponse {
+    status: string;
+    wallet_type: string;
+    identity_id: string;
+    balance: {
+        available_balance: number;
+        staked_balance: number;
+        pending_rewards: number;
+        total_balance: number;
+    };
+    permissions: WalletPermissions;
+    created_at: number;
+}
+export interface SimpleSendRequest {
+    from_identity: string;
+    to_address: string;
+    amount: number;
+    memo?: string;
+}
+export interface CrossWalletTransferRequest {
+    identity_id: string;
+    from_wallet: string;
+    to_wallet: string;
+    amount: number;
+    purpose?: string;
+}
+export interface StakingRequest {
+    identity_id: string;
+    amount: number;
+}
+export interface TransactionRecord {
+    tx_hash: string;
+    tx_type: string;
+    amount: number;
+    fee: number;
+    from_wallet: string | null;
+    to_address: string | null;
+    timestamp: number;
+    block_height: number | null;
+    status: string;
+    memo: string | null;
+}
+export interface TransactionHistoryResponse {
+    identity_id: string;
+    total_transactions: number;
+    transactions: TransactionRecord[];
+}
+export interface PeerInfo {
+    peer_id: string;
+    peer_type: string;
+    status: string;
+    connection_time: number | null;
+}
+export interface NetworkPeersResponse {
+    status: string;
+    peer_count: number;
+    peers: PeerInfo[];
+}
+export interface AddPeerRequest {
+    peer_address: string;
+    peer_type?: string;
+}
+export interface AddPeerResponse {
+    status: string;
+    peer_id: string;
+    message: string;
+    connected: boolean;
+}
+export interface MeshStatusInfo {
+    internet_connected: boolean;
+    mesh_connected: boolean;
+    connectivity_percentage: number;
+    coverage: number;
+    stability: number;
+}
+export interface TrafficStats {
+    bytes_sent: number;
+    bytes_received: number;
+    packets_sent: number;
+    packets_received: number;
+    connection_count: number;
+}
+export interface PeerDistribution {
+    active_peers: number;
+    local_peers: number;
+    regional_peers: number;
+    global_peers: number;
+    relay_peers: number;
+}
+export interface NetworkStatsResponse {
+    status: string;
+    mesh_status: MeshStatusInfo;
+    traffic_stats: TrafficStats;
+    peer_distribution: PeerDistribution;
+}
+export interface GasInfoResponse {
+    status: string;
+    gas_price: number;
+    estimated_cost: number;
+    base_fee: number;
+    priority_fee: number;
+}
+export interface ProtocolInfoResponse {
+    status: string;
+    protocol: string;
+    version: string;
+    node_id: string;
+    uptime: number;
+    supported_methods: string[];
+    supported_features: string[];
+}
+export interface HealthCheck {
+    name: string;
+    status: string;
+    message: string;
+}
+export interface HealthCheckResponse {
+    status: string;
+    healthy: boolean;
+    uptime: number;
+    timestamp: number;
+    checks: HealthCheck[];
+}
+export interface BuildInfo {
+    commit: string;
+    build_date: string;
+    rust_version: string;
+}
+export interface VersionResponse {
+    status: string;
+    server_version: string;
+    protocol_version: string;
+    api_version: string;
+    build_info: BuildInfo;
+}
+export interface Capability {
+    name: string;
+    version: string;
+    description: string;
+    enabled: boolean;
+}
+export interface CapabilitiesResponse {
+    status: string;
+    capabilities: Capability[];
+    extensions: string[];
+}
+export interface ProtocolStatsResponse {
+    status: string;
+    requests_handled: number;
+    active_connections: number;
+    total_bytes_sent: number;
+    total_bytes_received: number;
+    average_response_time: number;
+    error_rate: number;
+}
+export interface ContentMapping {
+    content: string;
+    content_type: string;
+}
+export interface Web4RegisterRequest {
+    domain: string;
+    owner: string;
+    content_mappings: Record<string, ContentMapping>;
+    metadata?: Record<string, any>;
+    signature: string;
+    timestamp: number;
+    fee?: number;
+}
+export interface Web4RegisterResponse {
+    success: boolean;
+    domain: string;
+    owner: string;
+    content_mappings: Record<string, string>;
+    fees_charged: number;
+    registered_at: number;
+    message: string;
+    blockchain_transaction?: string;
+    contract_deployed?: boolean;
+}
+export interface Web4ResolveResponse {
+    status: string;
+    domain: string;
+    owner: string;
+    registered_at: number;
+    expires_at: number;
+    note?: string;
+}
+export interface Web4DomainRecord {
+    domain: string;
+    owner: string;
+    registered_at: number;
+    expires_at: number;
+    content_mappings: Record<string, string>;
+}
+export interface Web4DomainLookupResponse {
+    found: boolean;
+    record?: Web4DomainRecord;
+    content_mappings: Record<string, string>;
 }
 //# sourceMappingURL=types.d.ts.map

@@ -6,6 +6,40 @@
 import { ConfigProvider } from '../core/config-provider';
 import { ApiConfig } from '../core/types';
 
+/**
+ * Validate config structure and types (P2-6: Electron IPC security)
+ */
+function validateConfig(config: any): config is ApiConfig {
+  if (!config || typeof config !== 'object') {
+    throw new Error('Invalid config: must be an object');
+  }
+
+  if (typeof config.zhtpNodeUrl !== 'string' || !config.zhtpNodeUrl) {
+    throw new Error('Invalid config: zhtpNodeUrl must be a non-empty string');
+  }
+
+  if (!['testnet', 'mainnet'].includes(config.networkType)) {
+    throw new Error('Invalid config: networkType must be "testnet" or "mainnet"');
+  }
+
+  if (typeof config.debugMode !== 'boolean') {
+    throw new Error('Invalid config: debugMode must be a boolean');
+  }
+
+  if (typeof config.enableBiometrics !== 'boolean') {
+    throw new Error('Invalid config: enableBiometrics must be a boolean');
+  }
+
+  // Validate URL format
+  try {
+    new URL(config.zhtpNodeUrl);
+  } catch {
+    throw new Error(`Invalid config: zhtpNodeUrl is not a valid URL: ${config.zhtpNodeUrl}`);
+  }
+
+  return true;
+}
+
 export class ElectronConfigProvider implements ConfigProvider {
   private ipcRenderer: any;
   private cacheKey = 'zhtp_config';
@@ -58,6 +92,9 @@ export class ElectronConfigProvider implements ConfigProvider {
       if (!this.cache) {
         throw new Error('No config returned from IPC');
       }
+
+      // P2-6: Validate config structure before using it
+      validateConfig(this.cache);
 
       return this.cache;
     } catch (error) {

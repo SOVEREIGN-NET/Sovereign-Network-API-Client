@@ -57,8 +57,12 @@ export class BrowserConfigProvider implements ConfigProvider {
     }
 
     // Use sensible defaults
+    // NOTE: ZHTP backend uses QUIC (UDP port 9334) but requires HTTP/3 gateway for browsers
+    // For development, ensure you have either:
+    // 1. HTTP-to-QUIC gateway running on port 8000, OR
+    // 2. Direct QUIC connection (requires custom fetch adapter)
     const defaultConfig: ApiConfig = {
-      zhtpNodeUrl: 'http://localhost:8000',
+      zhtpNodeUrl: 'http://localhost:8000', // Gateway to QUIC backend on :9334
       networkType: 'testnet',
       debugMode: true,
       enableBiometrics: true,

@@ -3,12 +3,13 @@
  * Handles request/response, retry logic, and timeouts
  */
 export class ZhtpApiCore {
-    constructor() {
+    constructor(fetchAdapter) {
         this.baseUrl = '';
         this.config = null;
         this.maxRetries = 3;
         this.requestTimeout = 10000;
         this.retryDelays = [1000, 2000, 4000]; // Exponential backoff
+        this.fetchAdapter = fetchAdapter || ((url, options) => fetch(url, options));
     }
     /**
      * Generic request method with retry logic and timeout
@@ -18,7 +19,7 @@ export class ZhtpApiCore {
             const url = `${this.baseUrl}${endpoint}`;
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), this.requestTimeout);
-            const response = await fetch(url, {
+            const response = await this.fetchAdapter(url, {
                 ...options,
                 signal: controller.signal,
             });

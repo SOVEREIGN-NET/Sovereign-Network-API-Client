@@ -142,18 +142,51 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         });
     }
     // ==================== Backup Operations ====================
-    async exportBackup(identityId, password) {
+    /**
+     * Export encrypted identity backup
+     *
+     * SECURITY WARNINGS:
+     * 1. Use a strong passphrase (minimum 12 characters)
+     * 2. Store backup data securely offline
+     * 3. Never share or log the passphrase
+     * 4. This operation requires an active authenticated session
+     *
+     * @param identityId - Identity ID to backup
+     * @param passphrase - Encryption passphrase (minimum 12 characters)
+     * @returns Encrypted backup data (base64) with creation timestamp
+     * @throws Error if passphrase is too short or session is invalid
+     */
+    async exportBackup(identityId, passphrase) {
+        if (passphrase.length < 12) {
+            throw new Error('Passphrase must be at least 12 characters');
+        }
         return this.request('/api/v1/identity/backup/export', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ identity_id: identityId, password }),
+            body: JSON.stringify({ identity_id: identityId, passphrase }),
         });
     }
-    async importBackup(backupData, password) {
+    /**
+     * Import and restore identity from encrypted backup
+     *
+     * SECURITY WARNINGS:
+     * 1. This endpoint is rate-limited to 3 attempts per hour per IP
+     * 2. Incorrect passphrase will result in decryption failure
+     * 3. Creates a new session upon successful import
+     *
+     * @param backupData - Encrypted backup data (base64 string from exportBackup)
+     * @param passphrase - Decryption passphrase (same as used for export)
+     * @returns Restored identity info and new session token
+     * @throws Error if passphrase is incorrect or backup is corrupted
+     */
+    async importBackup(backupData, passphrase) {
+        if (passphrase.length < 12) {
+            throw new Error('Passphrase must be at least 12 characters');
+        }
         return this.request('/api/v1/identity/backup/import', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ backup_data: backupData, password }),
+            body: JSON.stringify({ backup_data: backupData, passphrase }),
         });
     }
     async verifyBackup(backupData) {
@@ -163,8 +196,35 @@ export class ZhtpApiMethods extends ZhtpApiCore {
             body: JSON.stringify({ backup_data: backupData }),
         });
     }
+    /**
+     * Get backup status for an identity
+     *
+     * @param identityId - Identity ID to check
+     * @returns Backup status including recovery phrase existence and verification state
+     */
+    async getBackupStatus(identityId) {
+        return this.request(`/api/v1/identity/backup/status?identity_id=${encodeURIComponent(identityId)}`);
+    }
     // ==================== Seed Phrase Operations ====================
+    /**
+     * Verify a BIP39 seed phrase for a wallet
+     *
+     * SECURITY WARNINGS:
+     * 1. Seed phrase must be exactly 12 words
+     * 2. Never log or store seed phrases
+     * 3. This endpoint is rate-limited to prevent brute force attacks
+     * 4. Requires active authenticated session
+     *
+     * @param identityId - Identity ID that owns the wallet
+     * @param seedPhrase - 12-word BIP39 seed phrase to verify
+     * @returns Verification result
+     * @throws Error if seed phrase format is invalid
+     */
     async verifySeedPhrase(identityId, seedPhrase) {
+        const words = seedPhrase.trim().split(/\s+/);
+        if (words.length !== 12) {
+            throw new Error('Seed phrase must be exactly 12 words');
+        }
         return this.request('/api/v1/identity/seed/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -175,64 +235,78 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         return this.request(`/api/v1/identity/${identityId}/seeds`);
     }
     // ==================== Guardian Management ====================
-    async addGuardian(identityId, guardianId, guardianInfo) {
-        return this.request('/api/v1/guardian/add', {
+    async addGuardian(identityId, sessionToken, guardianDid, guardianPublicKey, guardianName) {
+        return this.request('/api/v1/identity/guardians/add', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 identity_id: identityId,
-                guardian_id: guardianId,
-                ...guardianInfo
+                session_token: sessionToken,
+                guardian_did: guardianDid,
+                guardian_public_key: guardianPublicKey,
+                guardian_name: guardianName
             }),
         });
     }
-    async listGuardians(identityId) {
-        return this.request(`/api/v1/guardian/list/${identityId}`);
-    }
-    async removeGuardian(identityId, guardianId) {
-        await this.request('/api/v1/guardian/remove', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ identity_id: identityId, guardian_id: guardianId }),
+    async listGuardians(sessionToken) {
+        return this.request('/api/v1/identity/guardians', {
+            headers: {
+                'Authorization': `Bearer ${sessionToken}`
+            }
         });
     }
-    async acceptGuardianInvite(guardianId, identityId) {
-        await this.request('/api/v1/guardian/accept', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ guardian_id: guardianId, identity_id: identityId }),
-        });
-    }
-    async declineGuardianInvite(guardianId, identityId) {
-        await this.request('/api/v1/guardian/decline', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ guardian_id: guardianId, identity_id: identityId }),
+    async removeGuardian(guardianId, sessionToken) {
+        await this.request(`/api/v1/identity/guardians/${guardianId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${sessionToken}`
+            }
         });
     }
     // ==================== Guardian Recovery Flow ====================
-    async initiateRecovery(identityId, guardianIds) {
-        return this.request('/api/v1/guardian/recovery/initiate', {
+    async initiateRecovery(identityDid, requesterDevice) {
+        return this.request('/api/v1/identity/recovery/initiate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ identity_id: identityId, guardian_ids: guardianIds }),
+            body: JSON.stringify({ identity_did: identityDid, requester_device: requesterDevice }),
         });
     }
-    async approveRecovery(guardianId, recoveryId, approval) {
-        await this.request('/api/v1/guardian/recovery/approve', {
+    async approveRecovery(recoveryId, guardianDid, sessionToken, signature) {
+        return this.request(`/api/v1/identity/recovery/${recoveryId}/approve`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ guardian_id: guardianId, recovery_id: recoveryId, approval }),
+            body: JSON.stringify({
+                guardian_did: guardianDid,
+                session_token: sessionToken,
+                signature: signature
+            }),
+        });
+    }
+    async rejectRecovery(recoveryId, guardianDid, sessionToken, signature) {
+        await this.request(`/api/v1/identity/recovery/${recoveryId}/reject`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                guardian_did: guardianDid,
+                session_token: sessionToken,
+                signature: signature
+            }),
+        });
+    }
+    async completeRecovery(recoveryId) {
+        return this.request(`/api/v1/identity/recovery/${recoveryId}/complete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
         });
     }
     async getRecoveryStatus(recoveryId) {
-        return this.request(`/api/v1/guardian/recovery/status/${recoveryId}`);
+        return this.request(`/api/v1/identity/recovery/${recoveryId}/status`);
     }
-    async cancelRecovery(recoveryId) {
-        await this.request('/api/v1/guardian/recovery/cancel', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ recovery_id: recoveryId }),
+    async getPendingRecoveries(sessionToken) {
+        return this.request('/api/v1/identity/recovery/pending', {
+            headers: {
+                'Authorization': `Bearer ${sessionToken}`
+            }
         });
     }
     // ==================== Citizenship ====================
@@ -285,37 +359,210 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         });
     }
     // ==================== Network Operations ====================
-    async getNetworkInfo() {
-        return this.request('/mesh/peers');
+    /**
+     * Get list of connected network peers
+     * @returns Peer information including peer IDs, types, and connection status
+     */
+    async getNetworkPeers() {
+        return this.request('/api/v1/blockchain/network/peers');
     }
-    // ==================== Wallet & Transaction Operations ====================
-    async getWallets(did) {
-        return this.request(`/wallet/balance?address=${encodeURIComponent(did)}`);
+    /**
+     * Get comprehensive network statistics including mesh status and traffic
+     * @returns Network stats with mesh status, traffic, and peer distribution
+     */
+    async getNetworkStats() {
+        return this.request('/api/v1/blockchain/network/stats');
     }
-    async getWalletBalance(did) {
-        const wallets = await this.getWallets(did);
-        return wallets.reduce((sum, w) => sum + w.balance, 0);
+    /**
+     * Get current gas pricing information for transaction cost estimation
+     * @returns Gas prices including base fee, priority fee, and estimated costs
+     */
+    async getGasInfo() {
+        return this.request('/api/v1/network/gas');
     }
-    async getTransactionHistory(address, walletType) {
-        let endpoint = `/wallet/transactions?address=${encodeURIComponent(address)}`;
-        if (walletType) {
-            endpoint += `&wallet_type=${encodeURIComponent(walletType)}`;
-        }
-        return this.request(endpoint);
-    }
-    async getAssets(address) {
-        return this.request(`/wallet/assets?address=${encodeURIComponent(address)}`);
-    }
-    async sendTransaction(from, to, amount, metadata) {
-        return this.request('/wallet/send', {
+    /**
+     * Add a peer to the network by address
+     * @param request - Peer address and optional peer type
+     * @returns Connection result with peer ID and status
+     */
+    async addNetworkPeer(request) {
+        return this.request('/api/v1/blockchain/network/peer/add', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ from, to, amount, metadata }),
+            body: JSON.stringify(request),
         });
+    }
+    /**
+     * Remove a peer from the network
+     * @param peerId - ID of the peer to remove
+     * @returns Removal result with status
+     */
+    async removeNetworkPeer(peerId) {
+        return this.request(`/api/v1/blockchain/network/peer/${peerId}`, {
+            method: 'DELETE',
+        });
+    }
+    // Legacy method (kept for backward compatibility)
+    /**
+     * @deprecated Use getNetworkPeers() instead
+     */
+    async getNetworkInfo() {
+        const response = await this.getNetworkPeers();
+        return {
+            peers: response.peer_count,
+            meshConnected: response.peers.length > 0,
+            latency: 0,
+            version: '1.0',
+            quantumResistant: true,
+        };
+    }
+    // ==================== Wallet & Transaction Operations ====================
+    /**
+     * List all wallets for an identity
+     * @param identityId - Identity ID (hex string)
+     * @returns List of all wallets with balances and permissions
+     */
+    async getWalletList(identityId) {
+        return this.request(`/api/v1/wallet/list/${identityId}`);
+    }
+    /**
+     * Get balance for a specific wallet type
+     * @param walletType - Wallet type (Primary, UBI, Savings, Staking, etc.)
+     * @param identityId - Identity ID (hex string)
+     * @returns Detailed balance information for the wallet
+     */
+    async getWalletBalance(walletType, identityId) {
+        return this.request(`/api/v1/wallet/balance/${walletType}/${identityId}`);
+    }
+    /**
+     * Get comprehensive wallet statistics for an identity
+     * @param identityId - Identity ID (hex string)
+     * @returns Wallet statistics
+     */
+    async getWalletStatistics(identityId) {
+        return this.request(`/api/v1/wallet/statistics/${identityId}`);
+    }
+    /**
+     * Get transaction history for an identity
+     * @param identityId - Identity ID (hex string)
+     * @returns Transaction history
+     */
+    async getWalletTransactionHistory(identityId) {
+        return this.request(`/api/v1/wallet/transactions/${identityId}`);
+    }
+    /**
+     * Send a simple payment from primary wallet
+     * @param request - Send request with from_identity, to_address, amount, memo
+     * @returns Transaction result
+     */
+    async sendWalletPayment(request) {
+        return this.request('/api/v1/wallet/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request),
+        });
+    }
+    /**
+     * Transfer tokens between wallets of the same identity
+     * @param request - Transfer request with identity_id, from_wallet, to_wallet, amount, purpose
+     * @returns Transfer result with transaction ID
+     */
+    async transferBetweenWallets(request) {
+        return this.request('/api/v1/wallet/transfer/cross-wallet', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request),
+        });
+    }
+    /**
+     * Stake tokens from Primary wallet to Staking wallet
+     * @param identityId - Identity ID (hex string)
+     * @param amount - Amount to stake
+     * @returns Staking result
+     */
+    async stakeTokens(identityId, amount) {
+        const request = {
+            identity_id: identityId,
+            amount: amount,
+        };
+        return this.request('/api/v1/wallet/staking/stake', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request),
+        });
+    }
+    /**
+     * Unstake tokens from Staking wallet back to Primary wallet
+     * @param identityId - Identity ID (hex string)
+     * @param amount - Amount to unstake
+     * @returns Unstaking result
+     */
+    async unstakeTokens(identityId, amount) {
+        const request = {
+            identity_id: identityId,
+            amount: amount,
+        };
+        return this.request('/api/v1/wallet/staking/unstake', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request),
+        });
+    }
+    // Legacy methods (kept for backward compatibility)
+    /**
+     * @deprecated Use getWalletList() instead
+     */
+    async getWallets(did) {
+        const response = await this.getWalletList(did);
+        return response.wallets.map(w => ({
+            id: w.wallet_id,
+            name: w.wallet_type,
+            balance: w.total_balance,
+            address: w.wallet_id,
+        }));
+    }
+    /**
+     * @deprecated Use getWalletTransactionHistory() instead
+     */
+    async getTransactionHistory(address, walletType) {
+        const response = await this.getWalletTransactionHistory(address);
+        return response.transactions.map(tx => ({
+            id: tx.tx_hash,
+            from: tx.from_wallet || '',
+            to: tx.to_address || '',
+            amount: tx.amount,
+            status: tx.status,
+            timestamp: new Date(tx.timestamp * 1000).toISOString(),
+            blockNumber: tx.block_height || undefined,
+            hash: tx.tx_hash,
+        }));
+    }
+    async getAssets(address) {
+        return this.request(`/api/v1/wallet/assets?address=${encodeURIComponent(address)}`);
+    }
+    /**
+     * @deprecated Use sendWalletPayment() instead
+     */
+    async sendTransaction(from, to, amount, metadata) {
+        const request = {
+            from_identity: from,
+            to_address: to,
+            amount: amount,
+            memo: metadata ? JSON.stringify(metadata) : undefined,
+        };
+        const result = await this.sendWalletPayment(request);
+        return {
+            id: result.transaction?.transaction_id || '',
+            from: from,
+            to: to,
+            amount: amount,
+            status: 'pending',
+            timestamp: new Date().toISOString(),
+        };
     }
     // ==================== DAO Operations ====================
     async getDaoProposals() {
-        return this.request('/dao/proposals');
+        return this.request('/api/v1/dao/proposals/list');
     }
     async getDaoStats() {
         const [proposals, treasury, delegates] = await Promise.all([
@@ -339,54 +586,67 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         };
     }
     async createProposal(proposal) {
-        return this.request('/dao/proposals', {
+        return this.request('/api/v1/dao/proposal/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(proposal),
         });
     }
-    async submitVote(proposalId, vote, voterDid) {
-        await this.request('/dao/vote', {
+    async submitVote(voterIdentityId, proposalId, voteChoice, justification) {
+        await this.request('/api/v1/dao/vote/cast', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ proposalId, vote, voterDid }),
+            body: JSON.stringify({
+                voter_identity_id: voterIdentityId,
+                proposal_id: proposalId,
+                vote_choice: voteChoice,
+                justification
+            }),
         });
     }
     async getDaoTreasury() {
-        const response = await this.request('/dao/treasury');
-        return response?.balance || 0;
+        const response = await this.request('/api/v1/dao/treasury/status');
+        return response?.treasury?.total_balance || 0;
     }
     async getProposalDetails(proposalId) {
-        return this.request(`/dao/proposals/${proposalId}`);
+        return this.request(`/api/v1/dao/proposal/${proposalId}`);
     }
     async getDaoData() {
-        return this.request('/dao/data');
+        return this.request('/api/v1/dao/data');
     }
     async getDaoDelegates() {
-        return this.request('/dao/delegates');
+        return this.request('/api/v1/dao/delegates');
     }
     async getDelegateProfile(delegateId) {
-        return this.request(`/dao/delegates/${delegateId}`);
+        return this.request(`/api/v1/dao/delegates/${delegateId}`);
     }
     async registerDelegate(userDid, delegateInfo) {
-        return this.request('/dao/delegates/register', {
+        return this.request('/api/v1/dao/delegates/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userDid, delegateInfo }),
+            body: JSON.stringify({ user_did: userDid, delegate_info: delegateInfo }),
         });
     }
     async revokeDelegation(userDid) {
-        await this.request('/dao/delegates/revoke', {
+        await this.request('/api/v1/dao/delegates/revoke', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userDid }),
+            body: JSON.stringify({ user_did: userDid }),
         });
     }
-    async getTreasuryHistory() {
-        return this.request('/dao/treasury/history');
+    async getTreasuryHistory(limit, offset) {
+        const params = new URLSearchParams();
+        if (limit)
+            params.append('limit', limit.toString());
+        if (offset)
+            params.append('offset', offset.toString());
+        const queryString = params.toString();
+        const url = `/api/v1/dao/treasury/transactions${queryString ? '?' + queryString : ''}`;
+        const response = await this.request(url);
+        return response?.transactions || [];
     }
     async createSpendingProposal(proposalData) {
-        return this.request('/dao/proposals/spending', {
+        return this.request('/api/v1/dao/proposals/spending', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(proposalData),
@@ -394,7 +654,7 @@ export class ZhtpApiMethods extends ZhtpApiCore {
     }
     async getVotingPower(userDid) {
         try {
-            const response = await this.request(`/dao/voting-power/${userDid}`);
+            const response = await this.request(`/api/v1/dao/voting-power/${userDid}`);
             return response.votingPower || 0;
         }
         catch (error) {
@@ -403,7 +663,7 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         }
     }
     async getUserVotes(userDid) {
-        return this.request(`/dao/user-votes/${userDid}`);
+        return this.request(`/api/v1/dao/user-votes/${userDid}`);
     }
     // ==================== Web4/DHT Operations ====================
     async resolveDapp(domain) {
@@ -423,6 +683,10 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         }
         return this.request(endpoint);
     }
+    /**
+     * Lookup contract by blockchain transaction hash
+     * @param hash - Deployment transaction hash
+     */
     async getContractByHash(hash) {
         return this.request(`/api/v1/blockchain/contract/${hash}`);
     }
@@ -432,62 +696,83 @@ export class ZhtpApiMethods extends ZhtpApiCore {
     async resolveDomain(domainName) {
         return this.request(`/api/v1/web4/resolve/${encodeURIComponent(domainName)}`);
     }
+    /**
+     * Register a new Web4 domain with content
+     * @param request - Domain registration request with owner, content, signature, fee
+     * @returns Registration response with domain details and transaction hash
+     */
+    async registerWeb4Domain(request) {
+        return this.request('/api/v1/web4/domains/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request),
+        });
+    }
+    /**
+     * Resolve Web4 domain to owner and registration details
+     * @param domain - Domain name (e.g., "example.zhtp")
+     * @returns Domain resolution with owner DID and registration timestamps
+     */
+    async resolveWeb4Domain(domain) {
+        return this.request(`/api/v1/web4/resolve/${encodeURIComponent(domain)}`);
+    }
+    /**
+     * Get full Web4 domain information including content mappings
+     * @param domain - Domain name (e.g., "example.zhtp")
+     * @returns Complete domain record with content hashes
+     */
+    async getWeb4Domain(domain) {
+        return this.request(`/api/v1/web4/domains/${encodeURIComponent(domain)}`);
+    }
+    /**
+     * Resolve Web4 domain via DHT network
+     * @param domain - Domain name (e.g., "example.zhtp")
+     */
+    async resolveWeb4ViaDht(domain) {
+        return this.request(`/api/v1/dht/web4/resolve/${encodeURIComponent(domain)}`);
+    }
+    /**
+     * Get contract from DHT distributed storage
+     * @param contractId - Contract identifier
+     */
+    async getContractFromDht(contractId) {
+        return this.request(`/api/v1/dht/contract/${contractId}`);
+    }
     // ==================== Blockchain Operations ====================
     async getBlockchainInfo() {
-        return this.request('/blockchain/info');
-    }
-    async getGasInfo() {
-        return this.request('/network/gas');
+        return this.request('/api/v1/blockchain/status');
     }
     async getNodeStatus() {
-        return this.request('/node/status');
+        return this.request('/api/v1/protocol/info');
     }
+    /**
+     * @deprecated Use getNetworkPeers() instead
+     */
     async getMeshPeers() {
-        return this.request('/mesh/peers');
-    }
-    async getNetworkStats() {
-        try {
-            const [blockchainInfo, gasInfo, meshInfo] = await Promise.all([
-                this.getBlockchainInfo().catch(() => ({})),
-                this.getGasInfo().catch(() => ({})),
-                this.getMeshPeers().catch(() => ({ peers: [], count: 0 })),
-            ]);
-            return {
-                blockchain: blockchainInfo,
-                gas: gasInfo,
-                mesh: meshInfo,
-                timestamp: new Date().toISOString(),
-            };
-        }
-        catch (error) {
-            console.warn('⚠️ Failed to get network stats:', error);
-            throw error;
-        }
+        const response = await this.getNetworkPeers();
+        return {
+            peers: response.peers.map(p => p.peer_id),
+            count: response.peer_count,
+        };
     }
     // ==================== Smart Contract Operations ====================
     async deployContract(contractData, options) {
-        return this.request('/api/v1/contract/deploy', {
+        return this.request('/api/v1/blockchain/contracts/deploy', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ...contractData, ...options }),
         });
     }
     async executeContract(contractId, functionName, args) {
-        return this.request('/api/v1/contract/execute', {
+        return this.request(`/api/v1/blockchain/contracts/${contractId}/call`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contractId, functionName, args }),
+            body: JSON.stringify({ functionName, args }),
         });
     }
     async queryContract(contractId, functionName, args) {
-        let endpoint = `/api/v1/contract/query/${contractId}`;
-        if (functionName) {
-            endpoint += `/${functionName}`;
-        }
-        return this.request(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ args }),
+        return this.request(`/api/v1/blockchain/contracts/${contractId}/state`, {
+            method: 'GET',
         });
     }
     async getContractMetadata(contractId) {
@@ -501,26 +786,58 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         });
     }
     // ==================== Zero-Knowledge Proof Operations ====================
-    async generateZkProof(data) {
-        return this.request('/api/v1/zkp/generate', {
+    /**
+     * Generate a zero-knowledge proof for privacy-preserving credential verification
+     *
+     * Supported proof types:
+     * - age_over_18: Prove age >= 18 without revealing exact age
+     * - age_range: Prove age in range (18-25, 26-40, 41-65, 66+) without revealing exact age
+     * - citizenship_verified: Prove verified citizen status without revealing identity
+     * - jurisdiction_membership: Prove membership in jurisdiction without revealing personal data
+     *
+     * @param request - Proof generation request with identity_id, proof_type, and credential_data
+     * @param sessionToken - Session token for authentication
+     * @returns Generated proof data with 24-hour expiration
+     *
+     * @example
+     * const proof = await client.generateZkProof({
+     *   identity_id: myIdentity.id,
+     *   proof_type: "age_over_18",
+     *   credential_data: { age: 25 }
+     * }, sessionToken);
+     */
+    async generateZkProof(request, sessionToken) {
+        const response = await this.request('/api/v1/zkp/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${sessionToken}`
+            },
+            body: JSON.stringify(request),
+        });
+        return response.proof;
+    }
+    /**
+     * Verify a zero-knowledge proof
+     *
+     * Validates that a proof is cryptographically sound and has not expired.
+     * Does NOT reveal the underlying credential values.
+     *
+     * @param proof - Proof data to verify
+     * @returns Verification result with validity status and claim type
+     *
+     * @example
+     * const verification = await client.verifyZkProof(proof);
+     * if (verification.valid) {
+     *   console.log(`Verified claim: ${verification.claim}`);
+     * }
+     */
+    async verifyZkProof(proof) {
+        return this.request('/api/v1/zkp/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
+            body: JSON.stringify({ proof }),
         });
-    }
-    async verifyZkProof(proof) {
-        try {
-            const response = await this.request('/api/v1/zkp/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(proof),
-            });
-            return response.valid || false;
-        }
-        catch (error) {
-            console.warn('⚠️ Failed to verify zero-knowledge proof:', error);
-            return false;
-        }
     }
     // ==================== Connection Management ====================
     async testConnection() {
@@ -534,50 +851,40 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         }
     }
     // ==================== Protocol Information ====================
+    /**
+     * Get protocol information including version, node ID, and supported features
+     * @returns Protocol information with capabilities and uptime
+     */
     async getProtocolInfo() {
-        try {
-            const response = await this.request('/node/status');
-            return {
-                success: true,
-                protocol: 'ZHTP/1.0',
-                version: response.version,
-                features: {
-                    quantum_resistant: response.quantum_resistant,
-                    zk_privacy_enabled: response.zk_privacy_enabled,
-                    mesh_networking: response.mesh_networking,
-                    dao_fees_enabled: response.dao_fees_enabled,
-                    pure_tcp: true
-                },
-                network: {
-                    id: response.network_id,
-                    consensus: response.consensus_state,
-                    block_height: response.block_height,
-                    peer_count: response.peer_count,
-                    healthy: response.healthy
-                },
-                node: {
-                    status: response.status,
-                    uptime: response.uptime_seconds,
-                    latency: response.latency_ms,
-                    synced: response.fully_synced
-                }
-            };
-        }
-        catch (error) {
-            console.error('❌ Failed to get protocol info:', error);
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : 'Unknown error',
-                protocol: 'ZHTP/1.0',
-                features: {
-                    quantum_resistant: true,
-                    zk_privacy_enabled: true,
-                    mesh_networking: true,
-                    dao_fees_enabled: true,
-                    pure_tcp: true
-                }
-            };
-        }
+        return this.request('/api/v1/protocol/info');
+    }
+    /**
+     * Get health check status for the node
+     * @returns Health status with checks for server, handlers, and memory
+     */
+    async getProtocolHealth() {
+        return this.request('/api/v1/protocol/health');
+    }
+    /**
+     * Get version information for server, protocol, and API
+     * @returns Version details including build information
+     */
+    async getProtocolVersion() {
+        return this.request('/api/v1/protocol/version');
+    }
+    /**
+     * Get list of protocol capabilities and extensions
+     * @returns Available capabilities with enabled status and descriptions
+     */
+    async getProtocolCapabilities() {
+        return this.request('/api/v1/protocol/capabilities');
+    }
+    /**
+     * Get protocol statistics including request counts and bandwidth
+     * @returns Protocol metrics with request handling and performance stats
+     */
+    async getProtocolStats() {
+        return this.request('/api/v1/protocol/stats');
     }
 }
 //# sourceMappingURL=zhtp-api-methods.js.map

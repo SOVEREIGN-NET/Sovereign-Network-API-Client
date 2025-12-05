@@ -47,6 +47,12 @@ echo "📤 Pushing to GitHub..."
 git push origin main
 git push origin "v$NEW_VERSION"
 
+# Get the commit message for the release notes
+COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+
+echo "📢 Creating GitHub release..."
+gh release create "v$NEW_VERSION" --target main --title "v$NEW_VERSION" --notes "$COMMIT_MESSAGE"
+
 echo ""
 echo "✅ Manual release complete!"
 echo "📋 Version: $NEW_VERSION"
