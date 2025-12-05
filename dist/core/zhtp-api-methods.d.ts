@@ -3,7 +3,7 @@
  * All API method implementations for various operations
  */
 import { ZhtpApiCore } from './zhtp-api-core';
-import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, SignupRequest, LoginRequest, BackupData, BackupVerification, BackupStatus, ImportBackupResponse, SeedVerification, SeedPhrases, Guardian, GuardianResponse, RecoverySession, RecoveryStatus, CitizenshipResult, ProofData, GenerateProofRequest, VerifyProofResponse, WalletListResponse, WalletBalanceResponse, SimpleSendRequest, CrossWalletTransferRequest, TransactionHistoryResponse, NetworkPeersResponse, NetworkStatsResponse, GasInfoResponse, AddPeerRequest, AddPeerResponse, ProtocolInfoResponse, HealthCheckResponse, VersionResponse, CapabilitiesResponse, ProtocolStatsResponse } from './types';
+import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, SignupRequest, LoginRequest, BackupData, BackupVerification, BackupStatus, ImportBackupResponse, SeedVerification, SeedPhrases, Guardian, GuardianResponse, RecoverySession, RecoveryStatus, CitizenshipResult, ProofData, GenerateProofRequest, VerifyProofResponse, WalletListResponse, WalletBalanceResponse, SimpleSendRequest, CrossWalletTransferRequest, TransactionHistoryResponse, NetworkPeersResponse, NetworkStatsResponse, GasInfoResponse, AddPeerRequest, AddPeerResponse, ProtocolInfoResponse, HealthCheckResponse, VersionResponse, CapabilitiesResponse, ProtocolStatsResponse, Web4RegisterRequest, Web4RegisterResponse, Web4ResolveResponse, Web4DomainLookupResponse } from './types';
 export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
     signIn(did: string, passphrase: string): Promise<Identity>;
     createIdentity(data: any): Promise<Identity>;
@@ -242,6 +242,24 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
     getContractByHash(hash: string): Promise<SmartContract>;
     getContractById(contractId: string): Promise<SmartContract>;
     resolveDomain(domainName: string): Promise<DApp>;
+    /**
+     * Register a new Web4 domain with content
+     * @param request - Domain registration request with owner, content, signature, fee
+     * @returns Registration response with domain details and transaction hash
+     */
+    registerWeb4Domain(request: Web4RegisterRequest): Promise<Web4RegisterResponse>;
+    /**
+     * Resolve Web4 domain to owner and registration details
+     * @param domain - Domain name (e.g., "example.zhtp")
+     * @returns Domain resolution with owner DID and registration timestamps
+     */
+    resolveWeb4Domain(domain: string): Promise<Web4ResolveResponse>;
+    /**
+     * Get full Web4 domain information including content mappings
+     * @param domain - Domain name (e.g., "example.zhtp")
+     * @returns Complete domain record with content hashes
+     */
+    getWeb4Domain(domain: string): Promise<Web4DomainLookupResponse>;
     /**
      * Resolve Web4 domain via DHT network
      * @param domain - Domain name (e.g., "example.zhtp")

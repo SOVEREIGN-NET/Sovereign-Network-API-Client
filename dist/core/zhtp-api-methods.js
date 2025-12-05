@@ -697,6 +697,34 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         return this.request(`/api/v1/web4/resolve/${encodeURIComponent(domainName)}`);
     }
     /**
+     * Register a new Web4 domain with content
+     * @param request - Domain registration request with owner, content, signature, fee
+     * @returns Registration response with domain details and transaction hash
+     */
+    async registerWeb4Domain(request) {
+        return this.request('/api/v1/web4/domains/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request),
+        });
+    }
+    /**
+     * Resolve Web4 domain to owner and registration details
+     * @param domain - Domain name (e.g., "example.zhtp")
+     * @returns Domain resolution with owner DID and registration timestamps
+     */
+    async resolveWeb4Domain(domain) {
+        return this.request(`/api/v1/web4/resolve/${encodeURIComponent(domain)}`);
+    }
+    /**
+     * Get full Web4 domain information including content mappings
+     * @param domain - Domain name (e.g., "example.zhtp")
+     * @returns Complete domain record with content hashes
+     */
+    async getWeb4Domain(domain) {
+        return this.request(`/api/v1/web4/domains/${encodeURIComponent(domain)}`);
+    }
+    /**
      * Resolve Web4 domain via DHT network
      * @param domain - Domain name (e.g., "example.zhtp")
      */
