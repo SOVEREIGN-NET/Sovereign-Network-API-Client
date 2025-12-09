@@ -119,6 +119,7 @@ describe('ZhtpApi', () => {
     it('signIn should POST to /api/v1/identity/signin', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi
           .fn()
           .mockResolvedValue({ did: 'did:test', displayName: 'Test User' }),
@@ -135,6 +136,7 @@ describe('ZhtpApi', () => {
     it('createIdentity should POST to /api/v1/identity/create', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({ did: 'did:new' }),
       });
 
@@ -149,6 +151,7 @@ describe('ZhtpApi', () => {
     it('getIdentity should GET from /api/v1/identity/get/{did}', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({ did: 'did:test' }),
       });
 
@@ -163,6 +166,7 @@ describe('ZhtpApi', () => {
     it('verifyIdentity should return boolean', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({ verified: true }),
       });
 
@@ -175,6 +179,7 @@ describe('ZhtpApi', () => {
     it('verifyIdentity should handle errors gracefully', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({ verified: false }),
       });
 
@@ -186,6 +191,7 @@ describe('ZhtpApi', () => {
     it('checkIdentityExists should return boolean', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({ exists: true }),
       });
 
@@ -198,6 +204,7 @@ describe('ZhtpApi', () => {
     it('checkIdentityExists should handle missing users', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({ exists: false }),
       });
 
@@ -217,6 +224,7 @@ describe('ZhtpApi', () => {
     it('exportBackup should POST to /api/v1/identity/backup/export with passphrase', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({
           backup_data: 'encrypted_data_base64',
           created_at: 1234567890,
@@ -237,6 +245,7 @@ describe('ZhtpApi', () => {
     it('importBackup should POST to /api/v1/identity/backup/import with passphrase', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({
           status: 'success',
           identity: {
@@ -261,6 +270,7 @@ describe('ZhtpApi', () => {
     it('getBackupStatus should GET from /api/v1/identity/backup/status', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({
           has_recovery_phrase: true,
           backup_date: 1234567890,
@@ -279,6 +289,7 @@ describe('ZhtpApi', () => {
     it('verifySeedPhrase should POST to /api/v1/identity/seed/verify', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({
           verified: true,
         }),
@@ -298,6 +309,7 @@ describe('ZhtpApi', () => {
     it('exportSeedPhrases should GET from /api/v1/identity/{id}/seeds', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({
           primary: ['word1', 'word2'],
           ubi: ['word3', 'word4'],
@@ -349,6 +361,7 @@ describe('ZhtpApi', () => {
     it('getWallets should GET from /api/v1/wallet/balance', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue([{ id: 'w1', balance: 100 }]),
       });
 
@@ -379,6 +392,7 @@ describe('ZhtpApi', () => {
     it('getTransactionHistory should GET from /api/v1/wallet/transactions', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue([]),
       });
 
@@ -393,6 +407,7 @@ describe('ZhtpApi', () => {
     it('getAssets should GET from /api/v1/wallet/assets', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue([]),
       });
 
@@ -429,6 +444,7 @@ describe('ZhtpApi', () => {
     it('getDaoProposals should GET from /api/v1/dao/proposals/list', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue([]),
       });
 
@@ -443,6 +459,7 @@ describe('ZhtpApi', () => {
     it('submitVote should POST to /api/v1/dao/vote/cast', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({}),
       });
 
@@ -468,6 +485,7 @@ describe('ZhtpApi', () => {
     it('getDaoTreasury should return 0 on missing balance', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({}),
       });
 
@@ -615,6 +633,7 @@ describe('ZhtpApi', () => {
     it('getNetworkInfo should GET from /api/v1/blockchain/network/peers', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({}),
       });
 
@@ -629,6 +648,7 @@ describe('ZhtpApi', () => {
     it('getBlockchainInfo should GET from /api/v1/blockchain/status', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({}),
       });
 
@@ -643,6 +663,7 @@ describe('ZhtpApi', () => {
     it('getGasInfo should GET from /api/v1/network/gas', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({}),
       });
 
@@ -657,6 +678,7 @@ describe('ZhtpApi', () => {
     it('getNodeStatus should GET from /api/v1/protocol/info', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({}),
       });
 
@@ -684,14 +706,17 @@ describe('ZhtpApi', () => {
       (global.fetch as any)
         .mockResolvedValueOnce({
           ok: true,
+          headers: { get: vi.fn(() => 'application/json') },
           json: vi.fn().mockResolvedValue({ blockHeight: 100 }),
         })
         .mockResolvedValueOnce({
           ok: true,
+          headers: { get: vi.fn(() => 'application/json') },
           json: vi.fn().mockResolvedValue({ gasPrice: 1 }),
         })
         .mockResolvedValueOnce({
           ok: true,
+          headers: { get: vi.fn(() => 'application/json') },
           json: vi.fn().mockResolvedValue({ peers: [] }),
         });
 
@@ -714,6 +739,7 @@ describe('ZhtpApi', () => {
     it('resolveDomain should GET from /api/v1/web4/resolve/{domain}', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({ domain: 'example.web4' }),
       });
 
@@ -728,6 +754,7 @@ describe('ZhtpApi', () => {
     it('loadWeb4Resource should POST to /api/v1/web4/load', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({ content: 'html' }),
       });
 
@@ -750,6 +777,7 @@ describe('ZhtpApi', () => {
     it('generateZkProof should POST to /api/v1/zkp/generate', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({ type: 'proof', data: '...' }),
       });
 
@@ -764,6 +792,7 @@ describe('ZhtpApi', () => {
     it('verifyZkProof should return boolean', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({ valid: true }),
       });
 
@@ -776,6 +805,7 @@ describe('ZhtpApi', () => {
     it('verifyZkProof should return false for invalid proofs', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({ valid: false }),
       });
 
@@ -795,6 +825,7 @@ describe('ZhtpApi', () => {
     it('testConnection should GET /health', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({}),
       });
 
@@ -810,6 +841,7 @@ describe('ZhtpApi', () => {
     it('testConnection should verify health endpoint', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({}),
       });
 
@@ -835,6 +867,8 @@ describe('ZhtpApi', () => {
         ok: false,
         status: 500,
         statusText: 'Internal Server Error',
+        headers: { get: vi.fn(() => 'application/json') },
+        json: vi.fn().mockResolvedValue({}),
       });
 
       await expect(api.getDaoProposals()).rejects.toThrow('HTTP 500');
@@ -845,6 +879,8 @@ describe('ZhtpApi', () => {
         ok: false,
         status: 404,
         statusText: 'Not Found',
+        headers: { get: vi.fn(() => 'application/json') },
+        json: vi.fn().mockResolvedValue({}),
       });
 
       // 4xx errors don't retry, so this should fail immediately
@@ -855,6 +891,7 @@ describe('ZhtpApi', () => {
     it('should handle empty response bodies', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue([]),
       });
 
@@ -875,6 +912,7 @@ describe('ZhtpApi', () => {
     it('should include Content-Type header for POST requests', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({}),
       });
 
@@ -887,6 +925,7 @@ describe('ZhtpApi', () => {
     it('should include request body for POST requests', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi.fn().mockResolvedValue({}),
       });
 
@@ -900,6 +939,7 @@ describe('ZhtpApi', () => {
     it('should construct correct URLs with query parameters', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: vi
           .fn()
           .mockResolvedValue([
