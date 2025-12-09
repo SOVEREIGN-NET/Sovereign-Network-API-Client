@@ -309,6 +309,13 @@ export class ZhtpApiMethods extends ZhtpApiCore {
             }
         });
     }
+    async cancelRecovery(recoveryId) {
+        await this.request(`/api/v1/guardian/recovery/cancel`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ recovery_id: recoveryId }),
+        });
+    }
     // ==================== Citizenship ====================
     async applyCitizenship(identityId, applicationData) {
         return this.request('/api/v1/identity/citizenship/apply', {
@@ -432,7 +439,8 @@ export class ZhtpApiMethods extends ZhtpApiCore {
      * @returns Detailed balance information for the wallet
      */
     async getWalletBalance(walletType, identityId) {
-        return this.request(`/api/v1/wallet/balance/${walletType}/${identityId}`);
+        const response = await this.request(`/api/v1/wallet/balance/${walletType}/${identityId}`);
+        return response.balance.available_balance;
     }
     /**
      * Get comprehensive wallet statistics for an identity
@@ -833,11 +841,12 @@ export class ZhtpApiMethods extends ZhtpApiCore {
      * }
      */
     async verifyZkProof(proof) {
-        return this.request('/api/v1/zkp/verify', {
+        const response = await this.request('/api/v1/zkp/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ proof }),
         });
+        return response.valid;
     }
     // ==================== Connection Management ====================
     async testConnection() {

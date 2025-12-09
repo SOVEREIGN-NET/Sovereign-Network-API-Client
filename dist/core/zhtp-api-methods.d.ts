@@ -3,7 +3,7 @@
  * All API method implementations for various operations
  */
 import { ZhtpApiCore } from './zhtp-api-core';
-import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, SignupRequest, LoginRequest, BackupData, BackupVerification, BackupStatus, ImportBackupResponse, SeedVerification, SeedPhrases, Guardian, GuardianResponse, RecoverySession, RecoveryStatus, CitizenshipResult, ProofData, GenerateProofRequest, VerifyProofResponse, WalletListResponse, WalletBalanceResponse, SimpleSendRequest, CrossWalletTransferRequest, TransactionHistoryResponse, NetworkPeersResponse, NetworkStatsResponse, GasInfoResponse, AddPeerRequest, AddPeerResponse, ProtocolInfoResponse, HealthCheckResponse, VersionResponse, CapabilitiesResponse, ProtocolStatsResponse, Web4RegisterRequest, Web4RegisterResponse, Web4ResolveResponse, Web4DomainLookupResponse } from './types';
+import { Identity, Wallet, NetworkStatus, DaoProposal, DaoStats, Transaction, Delegate, ProposalDetails, TreasuryRecord, DApp, SmartContract, ContractDeploymentResult, ContractExecutionResult, Asset, NodeStatus, SignupRequest, LoginRequest, BackupData, BackupVerification, BackupStatus, ImportBackupResponse, SeedVerification, SeedPhrases, Guardian, GuardianResponse, RecoverySession, RecoveryStatus, CitizenshipResult, ProofData, GenerateProofRequest, WalletListResponse, SimpleSendRequest, CrossWalletTransferRequest, TransactionHistoryResponse, NetworkPeersResponse, NetworkStatsResponse, GasInfoResponse, AddPeerRequest, AddPeerResponse, ProtocolInfoResponse, HealthCheckResponse, VersionResponse, CapabilitiesResponse, ProtocolStatsResponse, Web4RegisterRequest, Web4RegisterResponse, Web4ResolveResponse, Web4DomainLookupResponse } from './types';
 export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
     signIn(did: string, passphrase: string): Promise<Identity>;
     createIdentity(data: any): Promise<Identity>;
@@ -107,6 +107,7 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
             expires_at: number;
         }>;
     }>;
+    cancelRecovery(recoveryId: string): Promise<void>;
     applyCitizenship(identityId: string, applicationData?: Record<string, any>): Promise<CitizenshipResult>;
     createZkDid(didData?: Record<string, any>): Promise<any>;
     getIdentity(did: string): Promise<Identity>;
@@ -159,7 +160,7 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
      * @param identityId - Identity ID (hex string)
      * @returns Detailed balance information for the wallet
      */
-    getWalletBalance(walletType: string, identityId: string): Promise<WalletBalanceResponse>;
+    getWalletBalance(walletType: string, identityId: string): Promise<number>;
     /**
      * Get comprehensive wallet statistics for an identity
      * @param identityId - Identity ID (hex string)
@@ -320,7 +321,7 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
      *   console.log(`Verified claim: ${verification.claim}`);
      * }
      */
-    verifyZkProof(proof: ProofData): Promise<VerifyProofResponse>;
+    verifyZkProof(proof: ProofData): Promise<boolean>;
     testConnection(): Promise<boolean>;
     /**
      * Get protocol information including version, node ID, and supported features
