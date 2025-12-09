@@ -23,10 +23,94 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
      * Map login response from backend to Identity interface
      */
     private mapLoginResponseToIdentity;
-    recoverIdentity(method: 'seed' | 'backup' | 'social', data: string): Promise<Identity>;
-    recoverIdentityFromSeed(recoveryData: Record<string, any>): Promise<Identity>;
+    /**
+     * Recover identity from recovery phrase (20-word phrase)
+     *
+     * SECURITY WARNINGS:
+     * 1. This endpoint is rate-limited to 3 attempts per hour per IP
+     * 2. Requires exactly 20 words
+     * 3. Creates a new session upon successful recovery
+     *
+     * @param recoveryPhrase - 20-word recovery phrase
+     * @returns Recovered identity info and new session token
+     * @throws Error if recovery phrase is invalid or rate limit exceeded
+     */
+    recoverIdentity(recoveryPhrase: string): Promise<{
+        status: string;
+        identity: {
+            identity_id: string;
+            did: string;
+        };
+        session_token: string;
+    }>;
+    /**
+     * @deprecated Use recoverIdentity() with recovery phrase instead
+     */
+    recoverIdentityFromSeed(recoveryData: Record<string, any>): Promise<any>;
+    /**
+     * @deprecated Use importBackup() instead
+     */
     restoreIdentityFromBackup(backupData: Record<string, any>): Promise<Identity>;
+    /**
+     * @deprecated Guardian recovery endpoints not yet implemented in node
+     */
     recoverIdentityWithGuardians(guardianData: Record<string, any>): Promise<Identity>;
+    /**
+     * Generate a recovery phrase for identity backup
+     *
+     * SECURITY WARNINGS:
+     * 1. Recovery phrase is returned ONCE and must be displayed immediately
+     * 2. Client MUST display securely and NEVER store in logs/cache
+     * 3. Use HTTPS only to prevent network sniffing
+     * 4. Requires active authenticated session
+     *
+     * @param identityId - Identity ID to generate recovery phrase for
+     * @param sessionToken - Active session token for authentication
+     * @returns Recovery phrase hash, phrase (for display only), and instructions
+     * @throws Error if session is invalid or identity not found
+     */
+    generateRecoveryPhrase(identityId: string, sessionToken: string): Promise<{
+        status: string;
+        phrase_hash: string;
+        recovery_phrase: string;
+        instructions: string;
+    }>;
+    /**
+     * Verify a recovery phrase is correct (20 words)
+     *
+     * SECURITY WARNINGS:
+     * 1. Recovery phrase must be exactly 20 words
+     * 2. Never log or store recovery phrases
+     * 3. This endpoint prevents typos before using for recovery
+     *
+     * @param identityId - Identity ID that owns the recovery phrase
+     * @param recoveryPhrase - 20-word recovery phrase to verify
+     * @returns Verification result (true if valid, false if invalid)
+     * @throws Error if recovery phrase format is invalid
+     */
+    verifyRecoveryPhrase(identityId: string, recoveryPhrase: string): Promise<{
+        status: string;
+        verified: boolean;
+    }>;
+    /**
+     * Reset password using recovery phrase
+     *
+     * SECURITY WARNINGS:
+     * 1. This endpoint invalidates all existing sessions after successful reset
+     * 2. Requires valid 20-word recovery phrase
+     * 3. Use a strong new password (minimum 12 characters recommended)
+     * 4. Cannot be reversed - old password will no longer work
+     *
+     * @param identityId - Identity ID (can also use DID format "did:zhtp:xxx")
+     * @param recoveryPhrase - Valid 20-word recovery phrase
+     * @param newPassword - New password to set
+     * @returns Confirmation of password reset and session invalidation
+     * @throws Error if recovery phrase is invalid or identity not found
+     */
+    resetPassword(identityId: string, recoveryPhrase: string, newPassword: string): Promise<{
+        status: string;
+        message: string;
+    }>;
     /**
      * Export encrypted identity backup
      *
@@ -79,6 +163,9 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
      * @throws Error if seed phrase format is invalid
      */
     verifySeedPhrase(identityId: string, seedPhrase: string): Promise<SeedVerification>;
+    /**
+     * @deprecated This endpoint is not available in the node API
+     */
     exportSeedPhrases(identityId: string): Promise<SeedPhrases>;
     addGuardian(identityId: string, sessionToken: string, guardianDid: string, guardianPublicKey: number[], guardianName: string): Promise<GuardianResponse>;
     listGuardians(sessionToken: string): Promise<{
@@ -108,13 +195,60 @@ export declare abstract class ZhtpApiMethods extends ZhtpApiCore {
         }>;
     }>;
     applyCitizenship(identityId: string, applicationData?: Record<string, any>): Promise<CitizenshipResult>;
+    /**
+     * @deprecated ZK DID endpoints not yet implemented in the node
+     */
     createZkDid(didData?: Record<string, any>): Promise<any>;
-    getIdentity(did: string): Promise<Identity>;
+    /**
+     * Get identity information by ID
+     *
+     * @param identityId - Identity ID (hex format) or DID
+     * @returns Identity information including type, access level, and timestamps
+     * @throws Error if identity not found
+     */
+    getIdentity(identityId: string): Promise<{
+        status: string;
+        identity_id: string;
+        identity_type: string;
+        access_level: string;
+        created_at: number;
+        last_active: number;
+    }>;
+    /**
+     * @deprecated This endpoint is not available in the node API
+     */
     verifyIdentity(did: string, requirements?: Record<string, any>): Promise<boolean>;
+    /**
+     * @deprecated This endpoint is not available in the node API
+     */
     checkIdentityExists(identifier: string): Promise<boolean>;
+    /**
+     * @deprecated This endpoint is not available in the node API. Use signIn() or login() instead.
+     */
     signInWithIdentity(identity: Identity, passphrase: string): Promise<{
         token: string;
         identity: Identity;
+    }>;
+    /**
+     * Sign a message with an identity's private key
+     *
+     * SECURITY NOTES:
+     * 1. Uses post-quantum CRYSTALS-Dilithium2 algorithm
+     * 2. Signature is 2420 bytes
+     * 3. For verifying message authenticity and identity ownership
+     *
+     * @param identityId - Identity ID (hex format) to sign with
+     * @param message - Message to sign
+     * @returns Signature, algorithm, and public key
+     * @throws Error if identity not found or signing fails
+     */
+    signMessage(identityId: string, message: string): Promise<{
+        success: boolean;
+        identity_id: string;
+        message: string;
+        signature: string;
+        signature_algorithm: string;
+        public_key: string;
     }>;
     /**
      * Get list of connected network peers

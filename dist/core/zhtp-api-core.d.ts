@@ -14,6 +14,7 @@ export declare abstract class ZhtpApiCore {
     protected maxRetries: number;
     protected requestTimeout: number;
     protected retryDelays: number[];
+    protected isInitialized: boolean;
     /**
      * Custom fetch adapter (e.g., QUIC-based fetch for React Native)
      * Defaults to global fetch if not provided
@@ -22,8 +23,9 @@ export declare abstract class ZhtpApiCore {
     constructor(fetchAdapter?: FetchAdapter);
     /**
      * Generic request method with retry logic and timeout
+     * SECURITY: Includes error sanitization, Content-Type validation, and configurable timeouts
      */
-    protected request<T>(endpoint: string, options?: RequestInit, retryCount?: number): Promise<T>;
+    protected request<T>(endpoint: string, options?: RequestInit, retryCount?: number, timeoutMs?: number): Promise<T>;
     protected shouldRetry(error: any): boolean;
 }
 //# sourceMappingURL=zhtp-api-core.d.ts.map
