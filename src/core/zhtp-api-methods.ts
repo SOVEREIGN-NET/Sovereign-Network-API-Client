@@ -436,6 +436,14 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
     );
   }
 
+  async cancelRecovery(recoveryId: string): Promise<void> {
+    await this.request<void>(`/api/v1/guardian/recovery/cancel`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recovery_id: recoveryId }),
+    });
+  }
+
   // ==================== Citizenship ====================
 
   async applyCitizenship(identityId: string, applicationData?: Record<string, any>): Promise<CitizenshipResult> {
@@ -584,8 +592,9 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
    * @param identityId - Identity ID (hex string)
    * @returns Detailed balance information for the wallet
    */
-  async getWalletBalance(walletType: string, identityId: string): Promise<WalletBalanceResponse> {
-    return this.request<WalletBalanceResponse>(`/api/v1/wallet/balance/${walletType}/${identityId}`);
+  async getWalletBalance(walletType: string, identityId: string): Promise<number> {
+    const response = await this.request<WalletBalanceResponse>(`/api/v1/wallet/balance/${walletType}/${identityId}`);
+    return response.balance.available_balance;
   }
 
   /**
@@ -1067,12 +1076,13 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
    *   console.log(`Verified claim: ${verification.claim}`);
    * }
    */
-  async verifyZkProof(proof: ProofData): Promise<VerifyProofResponse> {
-    return this.request<VerifyProofResponse>('/api/v1/zkp/verify', {
+  async verifyZkProof(proof: ProofData): Promise<boolean> {
+    const response = await this.request<VerifyProofResponse>('/api/v1/zkp/verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ proof }),
     });
+    return response.valid;
   }
 
   // ==================== Connection Management ====================
