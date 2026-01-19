@@ -12,12 +12,6 @@ import { sanitizeError } from './security-utils';
  */
 export type FetchAdapter = (url: string, options?: RequestInit) => Promise<Response>;
 
-/**
- * Transport adapter for custom network implementations (e.g., QUIC)
- * React Native apps can provide their own fetch implementation using native QUIC
- */
-export type FetchAdapter = (url: string, options?: RequestInit) => Promise<Response>;
-
 export abstract class ZhtpApiCore {
   protected baseUrl: string = '';
   protected config: ApiConfig | null = null;
@@ -25,16 +19,6 @@ export abstract class ZhtpApiCore {
   protected requestTimeout = 10000;
   protected retryDelays = [1000, 2000, 4000]; // Exponential backoff
   protected isInitialized = false;
-
-  /**
-   * Custom fetch adapter (e.g., QUIC-based fetch for React Native)
-   * Defaults to global fetch if not provided
-   */
-  protected fetchAdapter: FetchAdapter;
-
-  constructor(fetchAdapter?: FetchAdapter) {
-    this.fetchAdapter = fetchAdapter || ((url, options) => fetch(url, options));
-  }
 
   /**
    * Custom fetch adapter (e.g., QUIC-based fetch for React Native)

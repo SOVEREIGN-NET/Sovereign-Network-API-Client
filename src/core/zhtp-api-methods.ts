@@ -26,6 +26,8 @@ import {
   SignupResponse,
   LoginRequest,
   LoginResponse,
+  RegisterIdentityRequest,
+  RegisterIdentityResponse,
   BackupData,
   BackupVerification,
   BackupStatus,
@@ -109,6 +111,46 @@ export abstract class ZhtpApiMethods extends ZhtpApiCore {
 
     // Map backend response to Identity interface
     return this.mapLoginResponseToIdentity(response);
+  }
+
+  /**
+   * Register identity with client-generated keys (iOS/Android)
+   *
+   * Use this for mobile apps where private keys are generated and stored on device.
+   * Private keys NEVER leave the device - only public keys are sent to server.
+   *
+   * @param request - Registration request with public keys and proof
+   * @returns Registration response with identity_id for keystore path
+   *
+   * @example
+   * ```typescript
+   * // iOS generates keys locally
+   * const did = `did:zhtp:${identityHash}`;
+   * const timestamp = Math.floor(Date.now() / 1000);
+   * const message = `ZHTP_REGISTER:${did}:${timestamp}`;
+   * const signature = sign(message, privateKey);
+   *
+   * const response = await api.registerIdentity({
+   *   did,
+   *   public_key: base64PublicKey,
+   *   kyber_public_key: base64KyberPublicKey,
+   *   node_id: base64NodeId, // Blake3(did || device_id)
+   *   device_id: deviceUUID,
+   *   display_name: "User's iPhone",
+   *   identity_type: "human",
+   *   registration_proof: base64Signature,
+   *   timestamp,
+   * });
+   *
+   * // Store locally using: Documents/keystore/{response.identity_id}/
+   * ```
+   */
+  async registerIdentity(request: RegisterIdentityRequest): Promise<RegisterIdentityResponse> {
+    return this.request<RegisterIdentityResponse>('/api/v1/identity/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
   }
 
   /**
