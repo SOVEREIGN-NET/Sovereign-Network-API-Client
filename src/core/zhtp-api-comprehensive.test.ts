@@ -38,7 +38,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockIdentity),
       });
@@ -65,7 +64,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockIdentity),
       });
@@ -88,7 +86,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockIdentity),
       });
@@ -105,7 +102,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       const mockDid = { did: 'did:zk:test', created: true };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockDid),
       });
@@ -126,7 +122,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       const mockDid = { did: 'did:zk:default' };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockDid),
       });
@@ -154,7 +149,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockResult),
       });
@@ -182,7 +176,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockProposal),
       });
@@ -191,7 +184,7 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       const result = await api.createProposal(proposalData);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/api/v1/dao/proposal/create',
+        'http://localhost:8000/api/v1/dao/proposals',
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify(proposalData),
@@ -215,7 +208,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockDetails),
       });
@@ -223,7 +215,7 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       const result = await api.getProposalDetails('prop-456');
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/api/v1/dao/proposal/prop-456',
+        'http://localhost:8000/api/v1/dao/proposals/prop-456',
         expect.any(Object)
       );
       expect(result.executionData).toBeDefined();
@@ -233,7 +225,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       const mockData = { participants: 1000, totalVotes: 5000 };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockData),
       });
@@ -260,7 +251,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       ];
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockDelegates),
       });
@@ -282,7 +272,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockDelegate),
       });
@@ -296,8 +285,7 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       expect(result.reputation).toBe(98);
     });
 
-    // TODO: fix - test expects camelCase (userDid) but implementation uses snake_case (user_did)
-    it.skip('registerDelegate should POST delegate registration', async () => {
+    it('registerDelegate should POST delegate registration', async () => {
       const mockDelegate = {
         id: 'del-new',
         name: 'New Delegate',
@@ -308,7 +296,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockDelegate),
       });
@@ -325,10 +312,8 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       expect(result.name).toBe('New Delegate');
     });
 
-    // TODO: fix - test expects camelCase (userDid) but implementation uses snake_case (user_did)
-    it.skip('revokeDelegation should POST revocation', async () => {
+    it('revokeDelegation should POST revocation', async () => {
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue({}),
       });
@@ -343,8 +328,7 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       );
     });
 
-    // TODO: fix - implementation returns empty array, mock response structure mismatch
-    it.skip('getTreasuryHistory should GET treasury records', async () => {
+    it('getTreasuryHistory should GET treasury records', async () => {
       const mockHistory = [
         {
           id: 'tx-1',
@@ -358,7 +342,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       ];
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockHistory),
       });
@@ -383,7 +366,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockProposal),
       });
@@ -405,7 +387,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       ];
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockVotes),
       });
@@ -422,7 +403,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       const mockDapp = { domain: 'test.zhtp', contentHash: 'hash123' };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockDapp),
       });
@@ -440,7 +420,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       const mockResource = { content: 'data', type: 'html' };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockResource),
       });
@@ -460,7 +439,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       const mockContent = { code: 'contract_code' };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockContent),
       });
@@ -478,7 +456,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       const mockContent = { file: 'module.js' };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockContent),
       });
@@ -495,7 +472,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       const mockContract = { hash: 'abc123', code: 'code' };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockContract),
       });
@@ -518,7 +494,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockContract),
       });
@@ -534,8 +509,7 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
   });
 
   describe('Transaction Operations', () => {
-    // TODO: fix - response.transactions is undefined
-    it.skip('getTransactionHistory should support wallet_type parameter', async () => {
+    it('getTransactionHistory should support wallet_type parameter', async () => {
       const mockTxs = [
         {
           id: 'tx-1',
@@ -548,7 +522,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       ];
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockTxs),
       });
@@ -561,8 +534,7 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       );
     });
 
-    // TODO: fix - body format mismatch
-    it.skip('sendTransaction should support metadata', async () => {
+    it('sendTransaction should support metadata', async () => {
       const mockTx = {
         id: 'tx-new',
         from: 'from-addr',
@@ -573,7 +545,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       };
 
       (global.fetch as any).mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockTx),
       });
@@ -598,7 +569,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
   describe('Success Path Coverage', () => {
     it('verifyZkProof should return true for valid proof', async () => {
       global.fetch = vi.fn().mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue({ valid: true }),
       });
@@ -611,7 +581,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
 
     it('testConnection should return true on successful health check', async () => {
       global.fetch = vi.fn().mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue({ healthy: true }),
       });
@@ -621,8 +590,7 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       expect(result).toBe(true);
     });
 
-    // TODO: fix - result.success is undefined
-    it.skip('getProtocolInfo should return protocol data', async () => {
+    it('getProtocolInfo should return protocol data', async () => {
       const mockNodeStatus = {
         version: '1.0.0',
         quantum_resistant: true,
@@ -641,7 +609,6 @@ describe('ZhtpApi - Comprehensive Coverage', () => {
       };
 
       global.fetch = vi.fn().mockResolvedValue({
-        headers: { get: vi.fn(() => 'application/json') },
         ok: true,
         json: vi.fn().mockResolvedValue(mockNodeStatus),
       });

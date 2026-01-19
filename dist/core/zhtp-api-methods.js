@@ -44,6 +44,45 @@ export class ZhtpApiMethods extends ZhtpApiCore {
         return this.mapLoginResponseToIdentity(response);
     }
     /**
+     * Register identity with client-generated keys (iOS/Android)
+     *
+     * Use this for mobile apps where private keys are generated and stored on device.
+     * Private keys NEVER leave the device - only public keys are sent to server.
+     *
+     * @param request - Registration request with public keys and proof
+     * @returns Registration response with identity_id for keystore path
+     *
+     * @example
+     * ```typescript
+     * // iOS generates keys locally
+     * const did = `did:zhtp:${identityHash}`;
+     * const timestamp = Math.floor(Date.now() / 1000);
+     * const message = `ZHTP_REGISTER:${did}:${timestamp}`;
+     * const signature = sign(message, privateKey);
+     *
+     * const response = await api.registerIdentity({
+     *   did,
+     *   public_key: base64PublicKey,
+     *   kyber_public_key: base64KyberPublicKey,
+     *   node_id: base64NodeId, // Blake3(did || device_id)
+     *   device_id: deviceUUID,
+     *   display_name: "User's iPhone",
+     *   identity_type: "human",
+     *   registration_proof: base64Signature,
+     *   timestamp,
+     * });
+     *
+     * // Store locally using: Documents/keystore/{response.identity_id}/
+     * ```
+     */
+    async registerIdentity(request) {
+        return this.request('/api/v1/identity/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request),
+        });
+    }
+    /**
      * Map signup response from backend to Identity interface
      */
     mapSignupResponseToIdentity(response) {
@@ -112,33 +151,131 @@ export class ZhtpApiMethods extends ZhtpApiCore {
             votingPower: undefined,
         };
     }
-    async recoverIdentity(method, data) {
-        const endpoint = `/api/v1/identity/recover/${method}`;
-        return this.request(endpoint, {
+    /**
+     * Recover identity from recovery phrase (20-word phrase)
+     *
+     * SECURITY WARNINGS:
+     * 1. This endpoint is rate-limited to 3 attempts per hour per IP
+     * 2. Requires exactly 20 words
+     * 3. Creates a new session upon successful recovery
+     *
+     * @param recoveryPhrase - 20-word recovery phrase
+     * @returns Recovered identity info and new session token
+     * @throws Error if recovery phrase is invalid or rate limit exceeded
+     */
+    async recoverIdentity(recoveryPhrase) {
+        const words = recoveryPhrase.trim().split(/\s+/);
+        if (words.length !== 20) {
+            throw new Error('Recovery phrase must be exactly 20 words');
+        }
+        return this.request('/api/v1/identity/recover', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data }),
+            body: JSON.stringify({ recovery_phrase: recoveryPhrase }),
         });
     }
+    /**
+     * @deprecated Use recoverIdentity() with recovery phrase instead
+     */
     async recoverIdentityFromSeed(recoveryData) {
-        return this.request('/api/v1/identity/restore/seed', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(recoveryData),
-        });
+        console.warn('⚠️ recoverIdentityFromSeed() is deprecated. Use recoverIdentity() instead.');
+        return this.recoverIdentity(recoveryData.recovery_phrase || '');
     }
+    /**
+     * @deprecated Use importBackup() instead
+     */
     async restoreIdentityFromBackup(backupData) {
-        return this.request('/api/v1/identity/backup/import', {
+        console.warn('⚠️ restoreIdentityFromBackup() is deprecated. Use importBackup() instead.');
+        return (await this.importBackup(backupData.backup_data, backupData.passphrase));
+    }
+    /**
+     * @deprecated Guardian recovery endpoints not yet implemented in node
+     */
+    async recoverIdentityWithGuardians(guardianData) {
+        console.warn('⚠️ Guardian recovery is not yet implemented in the node.');
+        throw new Error('Guardian recovery endpoints not yet available');
+    }
+    /**
+     * Generate a recovery phrase for identity backup
+     *
+     * SECURITY WARNINGS:
+     * 1. Recovery phrase is returned ONCE and must be displayed immediately
+     * 2. Client MUST display securely and NEVER store in logs/cache
+     * 3. Use HTTPS only to prevent network sniffing
+     * 4. Requires active authenticated session
+     *
+     * @param identityId - Identity ID to generate recovery phrase for
+     * @param sessionToken - Active session token for authentication
+     * @returns Recovery phrase hash, phrase (for display only), and instructions
+     * @throws Error if session is invalid or identity not found
+     */
+    async generateRecoveryPhrase(identityId, sessionToken) {
+        return this.request('/api/v1/identity/backup/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(backupData),
+            body: JSON.stringify({ identity_id: identityId, session_token: sessionToken }),
         });
     }
-    async recoverIdentityWithGuardians(guardianData) {
-        return this.request('/api/v1/identity/recover/guardians', {
+    /**
+     * Verify a recovery phrase is correct (20 words)
+     *
+     * SECURITY WARNINGS:
+     * 1. Recovery phrase must be exactly 20 words
+     * 2. Never log or store recovery phrases
+     * 3. This endpoint prevents typos before using for recovery
+     *
+     * @param identityId - Identity ID that owns the recovery phrase
+     * @param recoveryPhrase - 20-word recovery phrase to verify
+     * @returns Verification result (true if valid, false if invalid)
+     * @throws Error if recovery phrase format is invalid
+     */
+    async verifyRecoveryPhrase(identityId, recoveryPhrase) {
+        const words = recoveryPhrase.trim().split(/\s+/);
+        if (words.length !== 20) {
+            throw new Error('Recovery phrase must be exactly 20 words');
+        }
+        return this.request('/api/v1/identity/backup/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(guardianData),
+            body: JSON.stringify({ identity_id: identityId, recovery_phrase: recoveryPhrase }),
+        });
+    }
+    /**
+     * Reset password using recovery phrase
+     *
+     * SECURITY WARNINGS:
+     * 1. This endpoint invalidates all existing sessions after successful reset
+     * 2. Requires valid 20-word recovery phrase
+     * 3. Use a strong new password (minimum 12 characters recommended)
+     * 4. Cannot be reversed - old password will no longer work
+     *
+     * @param identityId - Identity ID (can also use DID format "did:zhtp:xxx")
+     * @param recoveryPhrase - Valid 20-word recovery phrase
+     * @param newPassword - New password to set
+     * @returns Confirmation of password reset and session invalidation
+     * @throws Error if recovery phrase is invalid or identity not found
+     */
+    async resetPassword(identityId, recoveryPhrase, newPassword) {
+        const words = recoveryPhrase.trim().split(/\s+/);
+        if (words.length !== 20) {
+            throw new Error('Recovery phrase must be exactly 20 words');
+        }
+        if (newPassword.length < 8) {
+            throw new Error('Password must be at least 8 characters');
+        }
+        // Handle both DID and hex identity ID formats
+        let idValue = identityId;
+        if (identityId.startsWith('did:zhtp:')) {
+            idValue = identityId;
+        }
+        return this.request('/api/v1/identity/password/recover', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                identity_id: idValue,
+                recovery_phrase: recoveryPhrase,
+                new_password: newPassword,
+            }),
         });
     }
     // ==================== Backup Operations ====================
@@ -231,8 +368,12 @@ export class ZhtpApiMethods extends ZhtpApiCore {
             body: JSON.stringify({ identity_id: identityId, seed_phrase: seedPhrase }),
         });
     }
+    /**
+     * @deprecated This endpoint is not available in the node API
+     */
     async exportSeedPhrases(identityId) {
-        return this.request(`/api/v1/identity/${identityId}/seeds`);
+        console.warn('⚠️ exportSeedPhrases() endpoint not available in node API. Seed phrases are only returned during identity creation.');
+        throw new Error('Seed phrase export not available');
     }
     // ==================== Guardian Management ====================
     async addGuardian(identityId, sessionToken, guardianDid, guardianPublicKey, guardianName) {
@@ -309,13 +450,6 @@ export class ZhtpApiMethods extends ZhtpApiCore {
             }
         });
     }
-    async cancelRecovery(recoveryId) {
-        await this.request(`/api/v1/guardian/recovery/cancel`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ recovery_id: recoveryId }),
-        });
-    }
     // ==================== Citizenship ====================
     async applyCitizenship(identityId, applicationData) {
         return this.request('/api/v1/identity/citizenship/apply', {
@@ -324,45 +458,67 @@ export class ZhtpApiMethods extends ZhtpApiCore {
             body: JSON.stringify({ identity_id: identityId, ...applicationData }),
         });
     }
+    /**
+     * @deprecated ZK DID endpoints not yet implemented in the node
+     */
     async createZkDid(didData) {
-        return this.request('/api/v1/identity/zkdid/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(didData || {}),
-        });
+        console.warn('⚠️ createZkDid() endpoint not yet implemented in node API.');
+        throw new Error('ZK DID creation not yet available');
     }
-    async getIdentity(did) {
-        return this.request(`/api/v1/identity/get/${did}`);
+    /**
+     * Get identity information by ID
+     *
+     * @param identityId - Identity ID (hex format) or DID
+     * @returns Identity information including type, access level, and timestamps
+     * @throws Error if identity not found
+     */
+    async getIdentity(identityId) {
+        // Handle both DID and hex identity ID formats
+        let idValue = identityId;
+        if (identityId.startsWith('did:zhtp:')) {
+            idValue = identityId.replace('did:zhtp:', '');
+        }
+        return this.request(`/api/v1/identity/${idValue}`);
     }
+    /**
+     * @deprecated This endpoint is not available in the node API
+     */
     async verifyIdentity(did, requirements) {
-        try {
-            const response = await this.request(`/api/v1/identity/verify/${did}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requirements || {}),
-            });
-            return response.verified || false;
-        }
-        catch (error) {
-            console.warn('⚠️ Failed to verify identity:', error);
-            return false;
-        }
+        console.warn('⚠️ verifyIdentity() endpoint not available in node API.');
+        throw new Error('Identity verification endpoint not available');
     }
+    /**
+     * @deprecated This endpoint is not available in the node API
+     */
     async checkIdentityExists(identifier) {
-        try {
-            const response = await this.request(`/api/v1/identity/exists/${encodeURIComponent(identifier)}`);
-            return response.exists || false;
-        }
-        catch (error) {
-            console.warn('⚠️ Failed to check identity existence:', error);
-            return false;
-        }
+        console.warn('⚠️ checkIdentityExists() endpoint not available in node API.');
+        throw new Error('Identity exists check endpoint not available');
     }
+    /**
+     * @deprecated This endpoint is not available in the node API. Use signIn() or login() instead.
+     */
     async signInWithIdentity(identity, passphrase) {
-        return this.request('/api/v1/identity/signin-with-identity', {
+        console.warn('⚠️ signInWithIdentity() endpoint not available in node API. Use signIn() instead.');
+        throw new Error('signInWithIdentity endpoint not available');
+    }
+    /**
+     * Sign a message with an identity's private key
+     *
+     * SECURITY NOTES:
+     * 1. Uses post-quantum CRYSTALS-Dilithium2 algorithm
+     * 2. Signature is 2420 bytes
+     * 3. For verifying message authenticity and identity ownership
+     *
+     * @param identityId - Identity ID (hex format) to sign with
+     * @param message - Message to sign
+     * @returns Signature, algorithm, and public key
+     * @throws Error if identity not found or signing fails
+     */
+    async signMessage(identityId, message) {
+        return this.request('/api/v1/identity/sign', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ identity, passphrase }),
+            body: JSON.stringify({ identity_id: identityId, message }),
         });
     }
     // ==================== Network Operations ====================
@@ -439,8 +595,7 @@ export class ZhtpApiMethods extends ZhtpApiCore {
      * @returns Detailed balance information for the wallet
      */
     async getWalletBalance(walletType, identityId) {
-        const response = await this.request(`/api/v1/wallet/balance/${walletType}/${identityId}`);
-        return response.balance.available_balance;
+        return this.request(`/api/v1/wallet/balance/${walletType}/${identityId}`);
     }
     /**
      * Get comprehensive wallet statistics for an identity
@@ -841,12 +996,11 @@ export class ZhtpApiMethods extends ZhtpApiCore {
      * }
      */
     async verifyZkProof(proof) {
-        const response = await this.request('/api/v1/zkp/verify', {
+        return this.request('/api/v1/zkp/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ proof }),
         });
-        return response.valid;
     }
     // ==================== Connection Management ====================
     async testConnection() {

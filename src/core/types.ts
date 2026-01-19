@@ -234,6 +234,78 @@ export interface SignupResponse {
   citizenship_result?: CitizenshipResult;
 }
 
+// ==================== Client-Side Identity Registration (iOS/Mobile) ====================
+
+/**
+ * Request for registering an identity with client-generated keys.
+ * Used by iOS/Android where private keys stay on device.
+ * Calls POST /api/v1/identity/register
+ */
+export interface RegisterIdentityRequest {
+  /** Decentralized Identifier: "did:zhtp:{64-char-hex}" */
+  did: string;
+
+  /** Base64-encoded Dilithium5 public key (~2592 bytes) */
+  public_key: string;
+
+  /** Base64-encoded Kyber1024 public key (~1568 bytes) - optional for PQC */
+  kyber_public_key?: string;
+
+  /** Base64-encoded node ID: Blake3(did || device_id) - 32 bytes */
+  node_id: string;
+
+  /** Device identifier (e.g., "5A63A821-595A-4A71-88FB-3A5448D2A8B6") */
+  device_id: string;
+
+  /** Optional display name */
+  display_name?: string;
+
+  /** Identity type: "human", "device", or "organization" (default: "human") */
+  identity_type?: string;
+
+  /**
+   * Base64-encoded signature proving ownership of private key.
+   * Signs the message: "ZHTP_REGISTER:{did}:{timestamp}"
+   */
+  registration_proof: string;
+
+  /** Unix timestamp in seconds when signature was created (must be within 300s of server time) */
+  timestamp: number;
+}
+
+/**
+ * Response from client-side identity registration.
+ * Use identity_id for keystore path: Documents/keystore/{identity_id}/
+ */
+export interface RegisterIdentityResponse {
+  /** Always "registered" on success */
+  status: 'registered';
+
+  /** 64-character hex string - USE THIS for keystore path */
+  identity_id: string;
+
+  /** Full DID: "did:zhtp:{identity_id}" */
+  did: string;
+
+  /** Device identifier echoed back */
+  device_id: string;
+
+  /** Identity type: "human", "device", or "organization" */
+  identity_type: string;
+
+  /** Blockchain transaction hash, or null if blockchain registration failed (non-fatal) */
+  blockchain_tx: string | null;
+
+  /** Welcome bonus amount (5000 for humans, 0 for others) */
+  welcome_bonus: number;
+
+  /** Unix timestamp when registered */
+  registered_at: number;
+
+  /** True if kyber_public_key was provided */
+  pqc_enabled: boolean;
+}
+
 export interface LoginResponse {
   status: string;
   identity_id: string;
